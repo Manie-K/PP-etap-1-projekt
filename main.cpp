@@ -26,27 +26,39 @@ int main() {
 	GameBoardDimensions_t gameBoardSize;
 	setBoardDimensions(gameBoardSize, intersectionCount);
 
+	Point_t gameBoardEndPoint = { gameBoardStartPoint.x + gameBoardSize.x - 1, gameBoardStartPoint.y + gameBoardSize.y - 1 };
+
 	//Board end point
 	Point_t boardEndPoint = { boardStartPoint.x + gameBoardSize.wholeBoardSize.x - 1, boardStartPoint.y + gameBoardSize.wholeBoardSize.y - 1 };
 
 	//Menu starting position
 	Point_t menuStartPoint = MENU_START_POINT;
-	//Menu size, set to correct value later when drawing menu for first time
+	//Menu size
 	Dimensions_t menuSize;
 	setMenuSize(menuSize);
 
 	//Menu ending
 	Point_t menuEndPoint = { menuStartPoint.x + menuSize.x - 1, menuStartPoint.y + menuSize.y - 1 };
-	
+
 	//Cursor starting point *(1,1) of game board*
 	Point_t cursorStartPoint = { gameBoardStartPoint.x, gameBoardStartPoint.y };
+	Point_t cursorPosition = { cursorStartPoint };
+	Point_t boardCursor = { 1,1 };
 
-	int zn = 0, x = 0, y = 0, attr = 7, back = 0, zero = 0;
-	char txt[32];
+
+	int zn = 0, attr = 7, back = 0, zero = 0;
+
+	//stones array
+	const unsigned int stonesArraySize = gameBoardSize.x * gameBoardSize.y;
+	Stones_enum* stones = new Stones_enum[stonesArraySize];
+	resetStones(stones, { gameBoardSize.x, gameBoardSize.y });
+
 
 #ifndef __cplusplus
 	Conio2_Init();
 #endif
+
+
 	// settitle sets the window title
 	settitle(NAME_AND_ALBUM);
 
@@ -72,42 +84,54 @@ int main() {
 		return -1;
 	}
 
+	//INITILIZE
+	drawBoard(boardStartPoint, gameBoardStartPoint, gameBoardSize, stones, 1);
+	initializeMenu(MENU_START_POINT, menuSize, cursorPosition);
 
 	do {
 		textbackground(BLACK);
-		clrscr();
 		textcolor(7);
 
-		initializeMenu(MENU_START_POINT, menuSize);
-		initializeBoard(boardStartPoint, gameBoardStartPoint, gameBoardSize);
-		// we draw a star
-		gotoxy(cursorStartPoint.x + x, cursorStartPoint.y + y);
-		textcolor(attr);
-		textbackground(back);
-		// putch prints one character and moves the cursor to the right
-		putch('*');
-		// we wait for key press and get its code
-		// most key codes correspond to the characters, like
-		// a is 'a', 2 is '2', + is '+', but some special keys
-		// like cursors provide two characters, where the first
-		// one is zero, e.g., "up arrow" is zero and 'H'
+		boardCursor = {(cursorPosition.x / (CELL_WIDTH + 1)) - 1, (cursorPosition.y / 2) - 1};
+
+		drawBoard(boardStartPoint, gameBoardStartPoint, gameBoardSize, stones, 0);
+		updateMenu({ menuStartPoint.x + 1,menuStartPoint.y + DYNAMIC_MENU_Y_OFFSET }, boardCursor);
+
+		drawCursor(cursorPosition);
 		zero = 0;
 		zn = getch();
-		// we do not want the key 'H' to play role of "up arrow"
-		// so we check if the first code is zero
+		
+
 		if (zn == 0) {
-			zero = 1;		// if this is the case then we read
-			zn = getch();		// the next code knowing that this
-			if (zn == 0x48) y-=2;	// will be a special key
-			else if (zn == 0x50) y+=2;
-			else if (zn == 0x4b) x-=CELL_WIDTH+1;
-			else if (zn == 0x4d) x+=CELL_WIDTH+1;
+			zero = 1;		
+			zn = getch();		
+			if (zn == 0x48)
+			{
+				if(cursorPosition.y > gameBoardStartPoint.y)
+				cursorPosition.y -= 2;
+			}
+			else if (zn == 0x50)
+			{
+				if (cursorPosition.y < gameBoardEndPoint.y)
+					cursorPosition.y += 2;
+			}
+			else if (zn == 0x4b)
+			{
+				if (cursorPosition.x > gameBoardStartPoint.x)
+					cursorPosition.x -= CELL_WIDTH + 1;
+			}
+			else if (zn == 0x4d) 
+			{
+				if (cursorPosition.x < gameBoardEndPoint.x)
+					cursorPosition.x += CELL_WIDTH + 1;
+			}
 		}
 		else if (zn == ' ') attr = (attr + 1) % 16;
 		else if (zn == 0x0d) back = (back + 1) % 16;	// enter key is 0x0d or '\r'
 	} while (zn != 'q');
 
 	textbackground(BLACK);
+	textcolor(WHITE);
 	clrscr();
 	_setcursortype(_NORMALCURSOR);	// show the cursor so it will be
 	// visible after the program ends

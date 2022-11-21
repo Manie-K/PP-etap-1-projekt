@@ -1,6 +1,8 @@
 #pragma once
 
 #include "configuration.h"
+
+//DATA STRUCTURES
 struct Point_t {
 	int x;
 	int y;
@@ -18,18 +20,27 @@ struct Constants_t {
 	Point_t boardStart;
 	Point_t menuStart;
 };
+enum Stones_enum
+{
+	empty = 0,
+	blackStone = 1,
+	whiteStone = 2
+};
 
-void initializeBoard(const Point_t startingPoint, const Point_t gameBoardStartPoint, const GameBoardDimensions_t gameBoardDimensions); //draws the whole board + stones
+//FUNCTIONS
+//draws the whole board + stones
+void drawBoard(const Point_t startingPoint, const Point_t gameBoardStartPoint, const GameBoardDimensions_t gameBoardDimensions, 
+Stones_enum stones[], int initialize);
+
 void drawBorder(int startX, int startY, Dimensions_t boardDimensions); //draws a border of the board
 void drawPadding(int startX, int startY, Dimensions_t boardDimensions); //draws a padding of the board
 void drawGameBoard(int startX, int startY, Dimensions_t gameBoardDimensions); //draws the game board (intersections + lines)
-//drawStones();
+void drawStones(Stones_enum stones[], Dimensions_t gameSize, Point_t gameStart); //draws stones
 
-void updateGameBoard(const Point_t gameBoardStartPoint, const Dimensions_t gameBoardDimensions); //updates the game board and stones
 
-void initializeMenu(const Point_t menuStartPoint, Dimensions_t menuSize); //draws the menu, and sets the menu size 
+void initializeMenu(const Point_t menuStartPoint, Dimensions_t menuSize, Point_t cursorPosition); //draws the menu, and sets the menu size 
 int menuControlsDisplay(const Point_t controlDisplayStart); //draws the control display part of menu, return num of lines drawn
-int updateMenu(const Point_t dynamicMenuStart); //updates dynamic parts of menu (eg. cursor and score), returns num of lines drawn
+int updateMenu(const Point_t dynamicMenuStart, Point_t cursorPosition); //updates dynamic parts of menu (eg. cursor and score), returns num of lines drawn
 void setMenuBackground(Point_t menuStartPoint, Dimensions_t menuSize); //sets the background of the menu
 
 //sets the sizes od board and game board. Uses original boardDimension
@@ -42,10 +53,12 @@ void setMenuSize(Dimensions_t &menuSize);
 void setGameBoardStartPoint(Point_t& gameBoardStartPoint, const Point_t startingPoint);
 
 bool constantsOK(Constants_t constants); //checks if the initial constants are okay (non-negative etc.)
-bool rectanglesCollide(Point_t A_topLeft, Point_t A_bottomRight, Point_t B_topLeft, Point_t B_bottomRight); //checks if 2 rectangles collide
+//checks if 2 rectangles collide
+bool rectanglesCollide(Point_t A_topLeft, Point_t A_bottomRight, Point_t B_topLeft, Point_t B_bottomRight);
 
-//sets the size of the game board (intersection count)
-int chooseGameSize();
+int chooseGameSize(); //sets the size of the game board (intersection count)
+int customGameSize(); //pics custom game board size
 
-//pics custom game board size
-int customGameSize();
+void resetStones(Stones_enum stones[], Dimensions_t gameSize); //sets all intersections to EMPTY
+
+void drawCursor(Point_t cursorPosition); //draws cursor

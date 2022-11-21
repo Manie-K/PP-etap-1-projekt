@@ -2,11 +2,12 @@
 #include "conio2.h"
 #include<stdio.h>
 
-void initializeBoard(const Point_t boardStartPoint, const Point_t gameBoardStartPoint, const GameBoardDimensions_t gameBoardDimensions)
+void drawBoard(const Point_t boardStartPoint, const Point_t gameBoardStartPoint, const GameBoardDimensions_t gameBoardDimensions,
+Stones_enum stones[], int initialize)
 {
 	drawGameBoard(gameBoardStartPoint.x, gameBoardStartPoint.y, { gameBoardDimensions.x, gameBoardDimensions.y });
-	//drawStones();
-	drawBorder(boardStartPoint.x, boardStartPoint.y, gameBoardDimensions.wholeBoardSize);
+	drawStones(stones, {gameBoardDimensions.x, gameBoardDimensions.y}, gameBoardStartPoint);
+	if(initialize == 1)drawBorder(boardStartPoint.x, boardStartPoint.y, gameBoardDimensions.wholeBoardSize);
 	drawPadding(boardStartPoint.x, boardStartPoint.y, gameBoardDimensions.wholeBoardSize);
 }
 void drawBorder(int startX, int startY, Dimensions_t boardDimensions)
@@ -168,14 +169,31 @@ void drawGameBoard(int startX, int startY, Dimensions_t gameBoardDimensions) {
 	gotoxy(bottomLeft.x, bottomLeft.y);
 	putch(192);								//└
 }
-
-void updateGameBoard(const Point_t gameBoardStartPoint, const Dimensions_t gameBoardDimensions)
+void drawStones(Stones_enum stones[], Dimensions_t gameSize, Point_t gameStart)
 {
-	drawGameBoard(gameBoardStartPoint.x, gameBoardStartPoint.y, { gameBoardDimensions.x, gameBoardDimensions.y });
-	//drawStones();
+	for (int y = 0; y < gameSize.y; y+=2)
+	{
+		for (int x = 0; x < gameSize.x; x+=CELL_WIDTH+1)
+		{
+			if (stones[x + y * gameSize.x] != empty) 
+			{
+				if (stones[x + y * gameSize.x] == blackStone)
+				{
+					textcolor(BLACK);
+				}
+				else if (stones[x + y * gameSize.x] == whiteStone)
+				{
+					textcolor(WHITE);
+				}
+				gotoxy(gameStart.x + x, gameStart.y + y);
+				putch(STONE_CHAR);
+			}
+		}
+	}
+	textcolor(BLACK);
 }
 
-void initializeMenu(const Point_t menuStartPoint, Dimensions_t menuSize)
+void initializeMenu(const Point_t menuStartPoint, const Dimensions_t menuSize, const Point_t cursorPosition)
 {
 	textbackground(MENU_BACKGROUND);
 	textcolor(MENU_TEXT);
@@ -199,7 +217,7 @@ void initializeMenu(const Point_t menuStartPoint, Dimensions_t menuSize)
 	for (int i = 0; i < menuSize.x; i++) putch('-');
 	gotoxy(menuStartPoint.x + 1, menuStartPoint.y + (k++));
 	cputs("Cursor Position: ");
-	k += updateMenu({ menuStartPoint.x + 1, menuStartPoint.y + k });
+	k += updateMenu({ menuStartPoint.x + 1, menuStartPoint.y + DYNAMIC_MENU_Y_OFFSET }, cursorPosition);
 	gotoxy(menuStartPoint.x, menuStartPoint.y + (k++));
 	for (int i = 0; i < menuSize.x; i++) putch('-');
 }
@@ -227,18 +245,21 @@ int menuControlsDisplay(const Point_t controlDisplayStart)
 
 	return i;
 }
-int updateMenu(const Point_t dynamicMenuStart)
+int updateMenu(const Point_t dynamicMenuStart, const Point_t cursorPosition)
 {
 	int k = 0;
 
-	int cursorX = 1;
-	int cursorY = 4;
+	textbackground(MENU_BACKGROUND);
+	textcolor(MENU_TEXT);
+
+	int cursorX = cursorPosition.x;
+	int cursorY = cursorPosition.y;
 	char currentPlayer[] = "White";
 	int scoreBlack = 1;
 	int scoreWhite = 5;
 	
 	gotoxy(dynamicMenuStart.x, dynamicMenuStart.y + (k++));
-	printf("X: %d   Y: %d", cursorX, cursorY);
+	printf("X: %d   Y: %d   ", cursorX, cursorY);
 	k++;
 	gotoxy(dynamicMenuStart.x, dynamicMenuStart.y + (k++));
 	printf("Current player: %s", currentPlayer);
@@ -346,8 +367,8 @@ int customGameSize()
 	int zn;
 	int size = 3;
 
-	textbackground(BLACK);
-	textcolor(WHITE);
+	textbackground(LIGHTCYAN);
+	textcolor(BLACK);
 
 	gotoxy(5, 6);
 	cputs("<-     decrease size");
@@ -355,11 +376,21 @@ int customGameSize()
 	cputs("->     increase size");
 	gotoxy(5, 8);
 	cputs("enter  confirm choice");
+	gotoxy(5, 9);
+	cputs("escape cancel");
 
 	while (true)
 	{
 		gotoxy(5,5);
-		printf("Board size: %dx%d", size, size);
+		
+		textbackground(LIGHTCYAN);
+		textcolor(RED);
+		
+		printf("Board size: %dx%d  ", size, size);
+		
+		textbackground(BLACK);
+		textcolor(BLACK);
+
 		zn = getch();
 		if (zn == 0)
 		{
@@ -373,10 +404,45 @@ int customGameSize()
 				if (size < MAX_GAME_BOARD_SIZE)size++;
 			}
 		}
-		if(zn == '\r') //enter key
+		else if(zn == '\r') //enter key
 		{ 
 			clrscr();
 			return size;
 		}
+		else if (zn == '\x1b') //escape
+		{
+			clrscr();
+			return chooseGameSize();
+		}
 	}
+}
+
+void resetStones(Stones_enum stones[], Dimensions_t gameSize)
+{
+	for (int y = 0; y < gameSize.y; y++)
+	{
+		for (int x = 0; x < gameSize.x; x++)
+		{
+			stones[x + y * gameSize.x] = empty;
+		}
+	}
+}
+void drawCursor(Point_t cursorPosition)
+{
+	textcolor(CURSOR_COLOR);
+	textbackground(GAME_BOARD_BACKGROUND);
+	int x = cursorPosition.x;
+	int y = cursorPosition.y;
+	
+	//drawing cursor
+	gotoxy(x+1, y + 1);
+	putch(217);								//┘
+	gotoxy(x+1, y - 1);
+	putch(191);								//┐
+	gotoxy(x-1, y + 1);
+	putch(192);								//└
+	gotoxy(x-1, y - 1);
+	putch(218);								//┌
+
+	textcolor(BLACK);
 }
