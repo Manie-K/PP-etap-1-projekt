@@ -6,9 +6,10 @@
 int main() {
 	//TODO
 
-	//dodawanie kamienia (do stones[])
+	//CHECK STONE NIE DZIALA!!!
 	//PLANSZA POZA GRANICA NIE DZIALA // SCROLL
 
+	Players_t players = DEFAULT_PLAYER_AND_SCORES;
 
 	//Sets the game board size (intersection count)
 	int intersectionCount;
@@ -48,7 +49,7 @@ int main() {
 
 	//stones array
 	const unsigned int stonesArraySize = intersectionCount * intersectionCount;
-	Stones_enum* stones = new Stones_enum[stonesArraySize];
+	Stone_t *stones = new Stone_t[stonesArraySize];
 	resetStones(stones, intersectionCount);
 
 
@@ -93,7 +94,7 @@ int main() {
 		boardCursor = {(cursorPosition.x / (CELL_WIDTH + 1)) - 1, (cursorPosition.y / 2) - 1};
 
 		drawBoard(boardStartPoint, gameBoardStartPoint, gameBoardSize, stones, intersectionCount, 0);
-		updateMenu({ menuStartPoint.x + 1,menuStartPoint.y + DYNAMIC_MENU_Y_OFFSET }, boardCursor);
+		updateMenu({ menuStartPoint.x + 1,menuStartPoint.y + DYNAMIC_MENU_Y_OFFSET }, boardCursor, players);
 
 		drawCursor(cursorPosition);
 		zero = 0;
@@ -126,16 +127,22 @@ int main() {
 		}
 		else if (zn == ' ') attr = (attr + 1) % 16;
 		else if (zn == 0x0d) back = (back + 1) % 16;
-		/*else if (zn == 'i')
+		else if (zn == 'i')
 		{
+		//CHECK STONE NIE DZIALA	
+			checkStone(boardCursor, stones, intersectionCount);
+				placeStone(boardCursor, stones, players.current, intersectionCount);
+				changePlayers(players);
 			
-		}*/
+		}
 	} while (zn != 'q');
 
 	textbackground(BLACK);
 	textcolor(WHITE);
 	clrscr();
-	_setcursortype(_NORMALCURSOR);	// show the cursor so it will be
-	// visible after the program ends
+	_setcursortype(_NORMALCURSOR);	
+
+	delete[] stones;
+
 	return 0;
 }

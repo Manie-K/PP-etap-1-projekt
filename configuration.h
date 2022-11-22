@@ -2,7 +2,8 @@
 //MAIN SETTINGS---------------------------------------------------------------
 #define BOARD_START_POINT {1,1} //sets the board (border + padding + game board) top left point {x,y} 
 #define MENU_START_POINT {60,1} //sets the menu top left point {x,y}
-#define STONE_CHAR 254
+#define STONE_CHAR 254 //the character used to represent a stone on board
+
 //BOARD SETTINGS--------------------------------------------------------------
 //!--- BORDER ---!
 #define BORDER_CHAR ('#') //character displayed on border
@@ -30,4 +31,5 @@
 #define NAME_AND_ALBUM "Maciej Góralczyk 193302" //my name and student album number
 #define IMPLEMENTED_FUNCTIONALITIES_STRING "Implemented functionalities:" //used later to calculate menu width
 #define MENU_HEIGHT 24 //sets menu height (manually, beacuse it is dependant of number of functionalities and controls
-#define DYNAMIC_MENU_Y_OFFSET 16
+#define DYNAMIC_MENU_Y_OFFSET 16 //where dynamic menu starts
+#define DEFAULT_PLAYER_AND_SCORES { {black, blackStone,0}, {white,whiteStone ,0}} //initial current player and scores

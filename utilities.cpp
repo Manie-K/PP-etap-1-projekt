@@ -3,7 +3,7 @@
 #include<stdio.h>
 
 void drawBoard(const Point_t boardStartPoint, const Point_t gameBoardStartPoint, const GameBoardDimensions_t gameBoardDimensions,
-Stones_enum stones[], int stoneArraySize_1D, int initialize)
+Stone_t stones[], int stoneArraySize_1D, int initialize)
 {
 	drawGameBoard(gameBoardStartPoint.x, gameBoardStartPoint.y, { gameBoardDimensions.x, gameBoardDimensions.y });
 	drawStones(stones, stoneArraySize_1D, gameBoardStartPoint);
@@ -169,19 +169,19 @@ void drawGameBoard(int startX, int startY, Dimensions_t gameBoardDimensions) {
 	gotoxy(bottomLeft.x, bottomLeft.y);
 	putch(192);								//└
 }
-void drawStones(Stones_enum stones[], int stoneArraySize_1D, Point_t gameStart)
+void drawStones(Stone_t stones[], int stoneArraySize_1D, Point_t gameStart)
 {
 	for (int y = 0; y < stoneArraySize_1D; y++)
 	{
 		for (int x = 0; x < stoneArraySize_1D; x++)
 		{
-			if (stones[x + y * stoneArraySize_1D] != empty)
+			if (stones[x + y * stoneArraySize_1D].color != empty)
 			{
-				if (stones[x + y * stoneArraySize_1D] == blackStone)
+				if (stones[x + y * stoneArraySize_1D].color == blackStone)
 				{
 					textcolor(BLACK);
 				}
-				else if (stones[x + y * stoneArraySize_1D] == whiteStone)
+				else if (stones[x + y * stoneArraySize_1D].color == whiteStone)
 				{
 					textcolor(WHITE);
 				}
@@ -217,7 +217,7 @@ void initializeMenu(const Point_t menuStartPoint, const Dimensions_t menuSize, c
 	for (int i = 0; i < menuSize.x; i++) putch('-');
 	gotoxy(menuStartPoint.x + 1, menuStartPoint.y + (k++));
 	cputs("Cursor Position: ");
-	k += updateMenu({ menuStartPoint.x + 1, menuStartPoint.y + DYNAMIC_MENU_Y_OFFSET }, cursorPosition);
+	k += updateMenu({ menuStartPoint.x + 1, menuStartPoint.y + DYNAMIC_MENU_Y_OFFSET }, cursorPosition, DEFAULT_PLAYER_AND_SCORES);
 	gotoxy(menuStartPoint.x, menuStartPoint.y + (k++));
 	for (int i = 0; i < menuSize.x; i++) putch('-');
 }
@@ -245,24 +245,44 @@ int menuControlsDisplay(const Point_t controlDisplayStart)
 
 	return i;
 }
-int updateMenu(const Point_t dynamicMenuStart, const Point_t cursorPosition)
+int updateMenu(const Point_t dynamicMenuStart, const Point_t cursorPosition, const Players_t Players)
 {
 	int k = 0;
 
 	textbackground(MENU_BACKGROUND);
 	textcolor(MENU_TEXT);
-
+	int scoreBlack;
+	int scoreWhite;
 	int cursorX = cursorPosition.x;
 	int cursorY = cursorPosition.y;
-	char currentPlayer[] = "White";
-	int scoreBlack = 1;
-	int scoreWhite = 5;
 	
+	bool blackPlayer;
+
+	if (Players.current.playerColor == black)
+	{
+		scoreBlack = Players.current.score;
+		scoreWhite = Players.enemy.score;
+		blackPlayer = true;
+	}
+	else
+	{
+		scoreBlack = Players.enemy.score;
+		scoreWhite = Players.current.score;
+		blackPlayer = false;
+	}
+
 	gotoxy(dynamicMenuStart.x, dynamicMenuStart.y + (k++));
 	printf("X: %d   Y: %d   ", cursorX, cursorY);
 	k++;
 	gotoxy(dynamicMenuStart.x, dynamicMenuStart.y + (k++));
-	printf("Current player: %s", currentPlayer);
+	if (blackPlayer)
+	{
+		cputs("Current player: Black");
+	}
+	else 
+	{
+		cputs("Current player: White");
+	}
 	k++;
 	gotoxy(dynamicMenuStart.x, dynamicMenuStart.y+ (k++));
 	cputs("Scores:");
@@ -417,13 +437,15 @@ int customGameSize()
 	}
 }
 
-void resetStones(Stones_enum stones[], int oneDimSize)
+void resetStones(Stone_t stones[], int oneDimSize)
 {
 	for (int y = 0; y < oneDimSize; y++)
 	{
 		for (int x = 0; x < oneDimSize; x++)
 		{
-			stones[x + y * oneDimSize] = empty;
+			stones[x + y * oneDimSize].color = empty;
+			stones[x + y * oneDimSize].position = { x,y };
+			stones[x + y * oneDimSize].liberties = 0;
 		}
 	}
 }
@@ -445,4 +467,63 @@ void drawCursor(Point_t cursorPosition)
 	putch(218);								//┌
 
 	textcolor(BLACK);
+}
+
+Stone_t findStoneByPos(Stone_t stones[], Point_t pos, int size_1D)
+{
+	for (int y = 0; y < size_1D; y++)
+	{
+		for (int x = 0; x < size_1D; x++)
+		{
+			if (stones[x + y * size_1D].position.x == pos.x && stones[x + y * size_1D].position.y == pos.y)
+				return stones[x + y * size_1D];
+		}
+	}
+
+	return { {-1,-1}, empty, 0 }; //return a stone with {-1,-1} position
+}
+bool checkStone(Point_t pos, Stone_t stones[], int size_1D)
+{
+	int x = pos.x;
+	int y = pos.y;
+	int liberties = 0;
+	
+	Stone_t thisStone = findStoneByPos(stones, pos, size_1D);
+	if (thisStone.color != empty) return false;
+
+	const int NeighboursCount = 4; //always 4, even if near border, so no need to change => not a easily changeable constant
+
+	Stone_t neighbours[NeighboursCount];
+	neighbours[0] = findStoneByPos(stones, {x, y - 1}, size_1D);
+	neighbours[1] = findStoneByPos(stones, { x, y + 1 }, size_1D);
+	neighbours[2] = findStoneByPos(stones, { x + 1, y }, size_1D);
+	neighbours[3] = findStoneByPos(stones, { x - 1, y }, size_1D);
+
+	for (int k = 0; k < NeighboursCount; k++)
+	{
+		if (neighbours[k].position.x!= -1) //if its outside of board we dont increase liberties
+		{
+			if (neighbours[k].color == empty || neighbours[k].color == thisStone.color)
+			{
+				liberties++;
+			}
+		}
+	}
+
+	return liberties > 0;
+}
+void placeStone(Point_t pos, Stone_t stones[], singlePlayer_T player, int size_1D)
+{
+	//stones[] starts indexing from 0, board position starts from 1
+	int x = pos.x - 1;
+	int y = pos.y - 1;
+	stones[x + y * size_1D].color = player.stoneColor;
+}
+void changePlayers(Players_t &players)
+{
+	singlePlayer_T temp = { players.current.playerColor, players.current.stoneColor ,players.current.score };
+	players.current.playerColor = players.enemy.playerColor;
+	players.current.stoneColor = players.enemy.stoneColor;
+	players.current.score = players.enemy.score;
+	players.enemy = temp;
 }
