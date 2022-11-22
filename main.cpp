@@ -6,9 +6,7 @@
 int main() {
 	//TODO
 
-	//Pozycja kursora
-	//Kursos nie ucieka za plansze
-	//£adniejszy kursor
+	//dodawanie kamienia (do stones[])
 	//PLANSZA POZA GRANICA NIE DZIALA // SCROLL
 
 
@@ -49,9 +47,9 @@ int main() {
 	int zn = 0, attr = 7, back = 0, zero = 0;
 
 	//stones array
-	const unsigned int stonesArraySize = gameBoardSize.x * gameBoardSize.y;
+	const unsigned int stonesArraySize = intersectionCount * intersectionCount;
 	Stones_enum* stones = new Stones_enum[stonesArraySize];
-	resetStones(stones, { gameBoardSize.x, gameBoardSize.y });
+	resetStones(stones, intersectionCount);
 
 
 #ifndef __cplusplus
@@ -85,7 +83,7 @@ int main() {
 	}
 
 	//INITILIZE
-	drawBoard(boardStartPoint, gameBoardStartPoint, gameBoardSize, stones, 1);
+	drawBoard(boardStartPoint, gameBoardStartPoint, gameBoardSize, stones, intersectionCount, 1);
 	initializeMenu(MENU_START_POINT, menuSize, cursorPosition);
 
 	do {
@@ -94,7 +92,7 @@ int main() {
 
 		boardCursor = {(cursorPosition.x / (CELL_WIDTH + 1)) - 1, (cursorPosition.y / 2) - 1};
 
-		drawBoard(boardStartPoint, gameBoardStartPoint, gameBoardSize, stones, 0);
+		drawBoard(boardStartPoint, gameBoardStartPoint, gameBoardSize, stones, intersectionCount, 0);
 		updateMenu({ menuStartPoint.x + 1,menuStartPoint.y + DYNAMIC_MENU_Y_OFFSET }, boardCursor);
 
 		drawCursor(cursorPosition);
@@ -127,7 +125,11 @@ int main() {
 			}
 		}
 		else if (zn == ' ') attr = (attr + 1) % 16;
-		else if (zn == 0x0d) back = (back + 1) % 16;	// enter key is 0x0d or '\r'
+		else if (zn == 0x0d) back = (back + 1) % 16;
+		/*else if (zn == 'i')
+		{
+			
+		}*/
 	} while (zn != 'q');
 
 	textbackground(BLACK);

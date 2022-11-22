@@ -30,12 +30,12 @@ enum Stones_enum
 //FUNCTIONS
 //draws the whole board + stones
 void drawBoard(const Point_t startingPoint, const Point_t gameBoardStartPoint, const GameBoardDimensions_t gameBoardDimensions, 
-Stones_enum stones[], int initialize);
+Stones_enum stones[], int stoneArraySize_1D, int initialize);
 
 void drawBorder(int startX, int startY, Dimensions_t boardDimensions); //draws a border of the board
 void drawPadding(int startX, int startY, Dimensions_t boardDimensions); //draws a padding of the board
 void drawGameBoard(int startX, int startY, Dimensions_t gameBoardDimensions); //draws the game board (intersections + lines)
-void drawStones(Stones_enum stones[], Dimensions_t gameSize, Point_t gameStart); //draws stones
+void drawStones(Stones_enum stones[], int stoneArraySize, Point_t gameStart); //draws stones
 
 
 void initializeMenu(const Point_t menuStartPoint, Dimensions_t menuSize, Point_t cursorPosition); //draws the menu, and sets the menu size 
@@ -59,6 +59,6 @@ bool rectanglesCollide(Point_t A_topLeft, Point_t A_bottomRight, Point_t B_topLe
 int chooseGameSize(); //sets the size of the game board (intersection count)
 int customGameSize(); //pics custom game board size
 
-void resetStones(Stones_enum stones[], Dimensions_t gameSize); //sets all intersections to EMPTY
+void resetStones(Stones_enum stones[], int oneDimSize); //sets all intersections to EMPTY
 
 void drawCursor(Point_t cursorPosition); //draws cursor

@@ -3,10 +3,10 @@
 #include<stdio.h>
 
 void drawBoard(const Point_t boardStartPoint, const Point_t gameBoardStartPoint, const GameBoardDimensions_t gameBoardDimensions,
-Stones_enum stones[], int initialize)
+Stones_enum stones[], int stoneArraySize_1D, int initialize)
 {
 	drawGameBoard(gameBoardStartPoint.x, gameBoardStartPoint.y, { gameBoardDimensions.x, gameBoardDimensions.y });
-	drawStones(stones, {gameBoardDimensions.x, gameBoardDimensions.y}, gameBoardStartPoint);
+	drawStones(stones, stoneArraySize_1D, gameBoardStartPoint);
 	if(initialize == 1)drawBorder(boardStartPoint.x, boardStartPoint.y, gameBoardDimensions.wholeBoardSize);
 	drawPadding(boardStartPoint.x, boardStartPoint.y, gameBoardDimensions.wholeBoardSize);
 }
@@ -169,23 +169,23 @@ void drawGameBoard(int startX, int startY, Dimensions_t gameBoardDimensions) {
 	gotoxy(bottomLeft.x, bottomLeft.y);
 	putch(192);								//└
 }
-void drawStones(Stones_enum stones[], Dimensions_t gameSize, Point_t gameStart)
+void drawStones(Stones_enum stones[], int stoneArraySize_1D, Point_t gameStart)
 {
-	for (int y = 0; y < gameSize.y; y+=2)
+	for (int y = 0; y < stoneArraySize_1D; y++)
 	{
-		for (int x = 0; x < gameSize.x; x+=CELL_WIDTH+1)
+		for (int x = 0; x < stoneArraySize_1D; x++)
 		{
-			if (stones[x + y * gameSize.x] != empty) 
+			if (stones[x + y * stoneArraySize_1D] != empty)
 			{
-				if (stones[x + y * gameSize.x] == blackStone)
+				if (stones[x + y * stoneArraySize_1D] == blackStone)
 				{
 					textcolor(BLACK);
 				}
-				else if (stones[x + y * gameSize.x] == whiteStone)
+				else if (stones[x + y * stoneArraySize_1D] == whiteStone)
 				{
 					textcolor(WHITE);
 				}
-				gotoxy(gameStart.x + x, gameStart.y + y);
+				gotoxy(gameStart.x + x*(CELL_WIDTH+1), gameStart.y + y*2);
 				putch(STONE_CHAR);
 			}
 		}
@@ -417,13 +417,13 @@ int customGameSize()
 	}
 }
 
-void resetStones(Stones_enum stones[], Dimensions_t gameSize)
+void resetStones(Stones_enum stones[], int oneDimSize)
 {
-	for (int y = 0; y < gameSize.y; y++)
+	for (int y = 0; y < oneDimSize; y++)
 	{
-		for (int x = 0; x < gameSize.x; x++)
+		for (int x = 0; x < oneDimSize; x++)
 		{
-			stones[x + y * gameSize.x] = empty;
+			stones[x + y * oneDimSize] = empty;
 		}
 	}
 }
