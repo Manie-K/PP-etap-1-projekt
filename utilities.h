@@ -19,6 +19,7 @@ struct GameBoardDimensions_t {
 struct Constants_t {
 	Point_t boardStart;
 	Point_t menuStart;
+	Point_t boardEndPoint;
 };
 enum StonesColors_enum
 {
@@ -86,6 +87,7 @@ void resetStones(Stone_t stones[], int oneDimSize); //sets all intersections to 
 void drawCursor(Point_t cursorPosition); //draws cursor
 
 Stone_t findStoneByPos(Stone_t stones[], Point_t pos, int size_1D); //return the point with this position or {-1, -1} if not found (out of board)
-bool checkStone(Point_t pos, Stone_t stones[], int size_1D); //checks if stone can be placed here
+bool checkStone(Point_t pos, Stone_t stones[], int size_1D, singlePlayer_T currentPlayer); //checks if stone can be placed here
 void placeStone(Point_t pos, Stone_t stones[], singlePlayer_T player, int size_1D); //add a stone to STONE array which will be later drawn 
-void changePlayers(Players_t& players); //swaps players (current and enemy)s
+void changePlayers(Players_t& players); //swaps players (current and enemy)
+bool stoneHasLiberties(Point_t pos, Stone_t stones[], int size_1D, singlePlayer_T currentPlayer) //check if stone at this position has liberties (ture or false)

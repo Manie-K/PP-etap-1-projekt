@@ -43,8 +43,8 @@ struct text_info {
 	unsigned char cury;
 	unsigned short attribute;
 	unsigned short normattr;
-	unsigned char screenwidth;
-	unsigned char screenheight;
+	int screenwidth;
+	int screenheight;
 	};
 
 #ifdef __cplusplus

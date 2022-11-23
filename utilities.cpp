@@ -76,36 +76,6 @@ void drawPadding(int startX, int startY, Dimensions_t boardDimensions)
 		gotoxy(startX + boardDimensions.x - 1 - GAME_BOARD_PADDING*CELL_WIDTH, startY + 1 + GAME_BOARD_PADDING + i);
 		for (int j = 0; j < GAME_BOARD_PADDING * CELL_WIDTH; j++) putch(' ');
 	}
-
-	/*if (layersToGo == 0) return;
-	int endX = boardDimensions.x - startX + 1;
-	int endY = boardDimensions.y - startY + 1;
-	//TOP
-	gotoxy(startX, startY);
-	for (int i = startX; i <= endX; i++) {
-		putch(' ');
-	}
-	//BOTTOM
-	gotoxy(startX, endY);
-	for (int i = startX; i <= endX; i++) {
-		putch(' ');
-	}
-	//LEFT
-	for (int j = 0; j < CELL_WIDTH; j++) {
-		for (int i = startY + 1; i <= endY; i++) {
-			gotoxy(startX + j, i);
-			putch(' ');
-		}
-	}
-	//RIGHT
-	for (int j = 0; j < CELL_WIDTH; j++) {
-		for (int i = startY + 1; i <= endY; i++) {
-			gotoxy(endX - j, i);
-			putch(' ');
-		}
-	}
-	//Next layer
-	drawPadding(startX + 1, startY + 1, layersToGo - 1, boardDimensions);*/
 }
 void drawGameBoard(int startX, int startY, Dimensions_t gameBoardDimensions) {
 	//characters used:
@@ -333,6 +303,9 @@ bool constantsOK(const Constants_t constants)
 		constants.menuStart.y < 1)
 		return false;
 	if (GAME_BOARD_PADDING < 1) return false;
+	text_info info;
+	gettextinfo(&info);
+	if (constants.boardEndPoint.x > info.screenwidth || constants.boardEndPoint.y > info.screenheight) return false;
 	return true;
 }
 bool rectanglesCollide(Point_t A_topLeft, Point_t A_bottomRight, Point_t B_topLeft, Point_t B_bottomRight)
@@ -444,7 +417,7 @@ void resetStones(Stone_t stones[], int oneDimSize)
 		for (int x = 0; x < oneDimSize; x++)
 		{
 			stones[x + y * oneDimSize].color = empty;
-			stones[x + y * oneDimSize].position = { x,y };
+			stones[x + y * oneDimSize].position = { x+1,y+1 };
 			stones[x + y * oneDimSize].liberties = 0;
 		}
 	}
@@ -474,43 +447,32 @@ Stone_t findStoneByPos(Stone_t stones[], Point_t pos, int size_1D)
 	for (int y = 0; y < size_1D; y++)
 	{
 		for (int x = 0; x < size_1D; x++)
-		{
-			if (stones[x + y * size_1D].position.x == pos.x && stones[x + y * size_1D].position.y == pos.y)
+		{//stones[] starts indexing from 0, board position starts from 1
+			if (stones[x + y * size_1D].position.x == pos.x && stones[x + y * size_1D].position.y == pos.y )
 				return stones[x + y * size_1D];
 		}
 	}
 
 	return { {-1,-1}, empty, 0 }; //return a stone with {-1,-1} position
 }
-bool checkStone(Point_t pos, Stone_t stones[], int size_1D)
+bool checkStone(Point_t pos, Stone_t stones[], int size_1D, singlePlayer_T currentPlayer)
 {
-	int x = pos.x;
-	int y = pos.y;
-	int liberties = 0;
-	
 	Stone_t thisStone = findStoneByPos(stones, pos, size_1D);
 	if (thisStone.color != empty) return false;
-
-	const int NeighboursCount = 4; //always 4, even if near border, so no need to change => not a easily changeable constant
-
-	Stone_t neighbours[NeighboursCount];
-	neighbours[0] = findStoneByPos(stones, {x, y - 1}, size_1D);
-	neighbours[1] = findStoneByPos(stones, { x, y + 1 }, size_1D);
-	neighbours[2] = findStoneByPos(stones, { x + 1, y }, size_1D);
-	neighbours[3] = findStoneByPos(stones, { x - 1, y }, size_1D);
-
-	for (int k = 0; k < NeighboursCount; k++)
-	{
-		if (neighbours[k].position.x!= -1) //if its outside of board we dont increase liberties
-		{
-			if (neighbours[k].color == empty || neighbours[k].color == thisStone.color)
-			{
-				liberties++;
-			}
-		}
+	if (stoneHasLiberties(pos, stones, size_1D, currentPlayer)) 
+	{ 
+		return true; 
 	}
-
-	return liberties > 0;
+	else 
+	{
+		/*if (stoneCanKill()?????)
+		{
+			delete killed one
+			return true
+		}
+		else*/
+			return false;
+	}
 }
 void placeStone(Point_t pos, Stone_t stones[], singlePlayer_T player, int size_1D)
 {
@@ -527,3 +489,42 @@ void changePlayers(Players_t &players)
 	players.current.score = players.enemy.score;
 	players.enemy = temp;
 }
+
+bool stoneHasLiberties(Point_t pos, Stone_t stones[], int size_1D, singlePlayer_T currentPlayer)
+{
+	int x = pos.x;
+	int y = pos.y;
+	
+	const int NeighboursCount = 4; //always 4, even if near border, so no need to change => not a easily changeable constant
+	Stone_t neighbours[NeighboursCount];
+	neighbours[0] = findStoneByPos(stones, { x, y - 1 }, size_1D);
+	neighbours[1] = findStoneByPos(stones, { x, y + 1 }, size_1D);
+	neighbours[2] = findStoneByPos(stones, { x + 1, y }, size_1D);
+	neighbours[3] = findStoneByPos(stones, { x - 1, y }, size_1D);
+
+	for (int k = 0; k < NeighboursCount; k++)
+	{
+		if (neighbours[k].position.x != -1) //if its outside of board we dont increase liberties
+		{
+			if (neighbours[k].color == empty || neighbours[k].color == currentPlayer.stoneColor)
+			{
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+//stoneCanKill() ? ? ? ? ? {
+//	put stone at this pos
+//
+//	check if other stones have liberties
+//
+//	remove placed stone
+//
+//	if other stones have on libs
+//
+//	return true
+//
+//	kill the other stone
+//}

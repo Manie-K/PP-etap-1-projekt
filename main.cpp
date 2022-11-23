@@ -6,7 +6,7 @@
 int main() {
 	//TODO
 
-	//CHECK STONE NIE DZIALA!!!
+	//POMYSLEC DOKLADNIE NAD CHECKSTONE
 	//PLANSZA POZA GRANICA NIE DZIALA // SCROLL
 
 	Players_t players = DEFAULT_PLAYER_AND_SCORES;
@@ -57,13 +57,14 @@ int main() {
 	Conio2_Init();
 #endif
 
-
+	
 	// settitle sets the window title
 	settitle(NAME_AND_ALBUM);
 
 	// hide the blinking cursor
 	_setcursortype(_NOCURSOR);
-
+	textbackground(BLACK);
+	textcolor(7);
 	
 	//CHECKING THE INITIAL VALUES
 	if (rectanglesCollide(menuStartPoint, menuEndPoint, boardStartPoint, boardEndPoint))
@@ -74,7 +75,7 @@ int main() {
 		cputs("MENU zachodzi na PLANSZE!\n");
 		return -1;
 	}
-	if (!constantsOK({ boardStartPoint, menuStartPoint }))
+	if (!constantsOK({ boardStartPoint, menuStartPoint, boardEndPoint }))
 	{
 		gotoxy(1, 1);
 		textcolor(WHITE);
@@ -88,10 +89,8 @@ int main() {
 	initializeMenu(MENU_START_POINT, menuSize, cursorPosition);
 
 	do {
-		textbackground(BLACK);
-		textcolor(7);
 
-		boardCursor = {(cursorPosition.x / (CELL_WIDTH + 1)) - 1, (cursorPosition.y / 2) - 1};
+		boardCursor = {((cursorPosition.x-gameBoardStartPoint.x) / (CELL_WIDTH + 1)) + 1, ((cursorPosition.y - gameBoardStartPoint.y) / 2) + 1};
 
 		drawBoard(boardStartPoint, gameBoardStartPoint, gameBoardSize, stones, intersectionCount, 0);
 		updateMenu({ menuStartPoint.x + 1,menuStartPoint.y + DYNAMIC_MENU_Y_OFFSET }, boardCursor, players);
@@ -129,11 +128,13 @@ int main() {
 		else if (zn == 0x0d) back = (back + 1) % 16;
 		else if (zn == 'i')
 		{
-		//CHECK STONE NIE DZIALA	
-			checkStone(boardCursor, stones, intersectionCount);
+			if (checkStone(boardCursor, stones, intersectionCount, players.current))
+			{
 				placeStone(boardCursor, stones, players.current, intersectionCount);
+				//check if stones are dead
+				//add score
 				changePlayers(players);
-			
+			}
 		}
 	} while (zn != 'q');
 
