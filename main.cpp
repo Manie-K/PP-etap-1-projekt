@@ -3,7 +3,7 @@
 #include "configuration.h"
 #include "utilities.h"
 
-int main() {
+int main(){
 	//TODO
 
 	//POMYSLEC DOKLADNIE NAD CHECKSTONE
@@ -131,8 +131,14 @@ int main() {
 			if (checkStone(boardCursor, stones, intersectionCount, players.current))
 			{
 				placeStone(boardCursor, stones, players.current, intersectionCount);
-				//check if stones are dead
-				//add score
+
+				Stone_t neighbours[NEIGHBOURS_COUNT];
+				setNeighbours(neighbours, boardCursor, stones, intersectionCount);
+
+				for (int k = 0; k < NEIGHBOURS_COUNT; k++) {
+					if (!stoneHasLiberties(neighbours[k].position, stones, intersectionCount, neighbours[k].color))
+						players.current.score += removeStone(neighbours[k].position, stones, intersectionCount);
+				}
 				changePlayers(players);
 			}
 		}

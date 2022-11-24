@@ -33,3 +33,4 @@
 #define MENU_HEIGHT 24 //sets menu height (manually, beacuse it is dependant of number of functionalities and controls
 #define DYNAMIC_MENU_Y_OFFSET 16 //where dynamic menu starts
 #define DEFAULT_PLAYER_AND_SCORES { {black, blackStone,0}, {white,whiteStone ,0}} //initial current player and scores
+#define NEIGHBOURS_COUNT 4 //always 4, even if near border, so no need to change

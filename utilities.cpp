@@ -444,34 +444,38 @@ void drawCursor(Point_t cursorPosition)
 
 Stone_t findStoneByPos(Stone_t stones[], Point_t pos, int size_1D)
 {
-	for (int y = 0; y < size_1D; y++)
-	{
-		for (int x = 0; x < size_1D; x++)
-		{//stones[] starts indexing from 0, board position starts from 1
-			if (stones[x + y * size_1D].position.x == pos.x && stones[x + y * size_1D].position.y == pos.y )
-				return stones[x + y * size_1D];
+	if(pos.x>=1 && pos.y>=1) {
+		for (int y = 0; y < size_1D; y++)
+		{
+			for (int x = 0; x < size_1D; x++)
+			{//stones[] starts indexing from 0, board position starts from 1
+				if (stones[x + y * size_1D].position.x == pos.x && stones[x + y * size_1D].position.y == pos.y)
+					return stones[x + y * size_1D];
+			}
 		}
 	}
-
 	return { {-1,-1}, empty, 0 }; //return a stone with {-1,-1} position
 }
-bool checkStone(Point_t pos, Stone_t stones[], int size_1D, singlePlayer_T currentPlayer)
+bool checkStone(Point_t pos, Stone_t stones[], int size_1D, singlePlayer_T& currentPlayer)
 {
 	Stone_t thisStone = findStoneByPos(stones, pos, size_1D);
 	if (thisStone.color != empty) return false;
-	if (stoneHasLiberties(pos, stones, size_1D, currentPlayer)) 
+	if (stoneHasLiberties(pos, stones, size_1D, currentPlayer.stoneColor)) 
 	{ 
 		return true; 
 	}
 	else 
 	{
-		/*if (stoneCanKill()?????)
+		Point_t pointToBeKilled = stoneCanKill(pos, stones, size_1D, currentPlayer);
+		if (pointToBeKilled.x == -1) 
 		{
-			delete killed one
-			return true
-		}
-		else*/
 			return false;
+		}
+		else
+		{
+			currentPlayer.score += removeStone(pointToBeKilled, stones, size_1D);
+			return true;
+		}
 	}
 }
 void placeStone(Point_t pos, Stone_t stones[], singlePlayer_T player, int size_1D)
@@ -490,23 +494,19 @@ void changePlayers(Players_t &players)
 	players.enemy = temp;
 }
 
-bool stoneHasLiberties(Point_t pos, Stone_t stones[], int size_1D, singlePlayer_T currentPlayer)
+bool stoneHasLiberties(Point_t pos, Stone_t stones[], int size_1D, StonesColors_enum currentPlayerStoneColor)
 {
 	int x = pos.x;
 	int y = pos.y;
 	
-	const int NeighboursCount = 4; //always 4, even if near border, so no need to change => not a easily changeable constant
-	Stone_t neighbours[NeighboursCount];
-	neighbours[0] = findStoneByPos(stones, { x, y - 1 }, size_1D);
-	neighbours[1] = findStoneByPos(stones, { x, y + 1 }, size_1D);
-	neighbours[2] = findStoneByPos(stones, { x + 1, y }, size_1D);
-	neighbours[3] = findStoneByPos(stones, { x - 1, y }, size_1D);
+	Stone_t neighbours[NEIGHBOURS_COUNT];
+	setNeighbours(neighbours, pos, stones, size_1D);
 
-	for (int k = 0; k < NeighboursCount; k++)
+	for (int k = 0; k < NEIGHBOURS_COUNT; k++)
 	{
 		if (neighbours[k].position.x != -1) //if its outside of board we dont increase liberties
 		{
-			if (neighbours[k].color == empty || neighbours[k].color == currentPlayer.stoneColor)
+			if (neighbours[k].color == empty || neighbours[k].color == currentPlayerStoneColor)
 			{
 				return true;
 			}
@@ -515,16 +515,50 @@ bool stoneHasLiberties(Point_t pos, Stone_t stones[], int size_1D, singlePlayer_
 	return false;
 }
 
-//stoneCanKill() ? ? ? ? ? {
-//	put stone at this pos
-//
-//	check if other stones have liberties
-//
-//	remove placed stone
-//
-//	if other stones have on libs
-//
-//	return true
-//
-//	kill the other stone
-//}
+Point_t stoneCanKill(Point_t pos, Stone_t stones[], int size_1D, singlePlayer_T currentPlayer)
+{
+	//stones[] starts indexing from 0, board position starts from 1
+	int x = pos.x - 1;
+	int y = pos.y - 1;
+	//temporarly putting the stone here
+	stones[x + y * size_1D].color = currentPlayer.stoneColor;
+	int k = 0;
+	Stone_t neighbours[NEIGHBOURS_COUNT];
+	setNeighbours(neighbours, pos, stones, size_1D);
+	for (k = 0; k < NEIGHBOURS_COUNT; k++)
+	{
+		if (neighbours[k].position.x != -1) {
+			if (!stoneHasLiberties(neighbours[k].position, stones, size_1D, neighbours[k].color))
+			{
+				break;
+			}
+		}
+	}
+	//removing the temporary stone, will be added later in main()
+	stones[x + y * size_1D].color = empty;
+	if (k < 4)
+	{
+		//placing the stone would kill at least one enemy, giving this stone liberty
+		return neighbours[k].position;
+	}
+	else return { -1, -1};
+
+}
+int removeStone(Point_t pos, Stone_t stones[], int size_1D)
+{
+	//stones[] starts indexing from 0, board position starts from 1
+	int x = pos.x - 1;
+	int y = pos.y - 1;
+	if (stones[x + y * size_1D].color != empty) {
+		stones[x + y * size_1D].color = empty;
+		return 1; //later change when removing whole chains
+	}
+	else return 0;
+}
+void setNeighbours(Stone_t neighbours[], Point_t pos, Stone_t stones[], int size_1D)
+{
+	neighbours[0] = findStoneByPos(stones, { pos.x, pos.y - 1 }, size_1D);
+	neighbours[1] = findStoneByPos(stones, { pos.x, pos.y + 1 }, size_1D);
+	neighbours[2] = findStoneByPos(stones, { pos.x + 1, pos.y }, size_1D);
+	neighbours[3] = findStoneByPos(stones, { pos.x - 1, pos.y }, size_1D);
+}

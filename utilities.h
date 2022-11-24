@@ -87,7 +87,16 @@ void resetStones(Stone_t stones[], int oneDimSize); //sets all intersections to 
 void drawCursor(Point_t cursorPosition); //draws cursor
 
 Stone_t findStoneByPos(Stone_t stones[], Point_t pos, int size_1D); //return the point with this position or {-1, -1} if not found (out of board)
-bool checkStone(Point_t pos, Stone_t stones[], int size_1D, singlePlayer_T currentPlayer); //checks if stone can be placed here
+bool checkStone(Point_t pos, Stone_t stones[], int size_1D, singlePlayer_T& currentPlayer); //checks if stone can be placed here
 void placeStone(Point_t pos, Stone_t stones[], singlePlayer_T player, int size_1D); //add a stone to STONE array which will be later drawn 
 void changePlayers(Players_t& players); //swaps players (current and enemy)
-bool stoneHasLiberties(Point_t pos, Stone_t stones[], int size_1D, singlePlayer_T currentPlayer) //check if stone at this position has liberties (ture or false)
+
+//checks if stone at this position has liberties (true or false)
+bool stoneHasLiberties(Point_t pos, Stone_t stones[], int size_1D, StonesColors_enum currentPlayerStoneColor);
+
+//checks if this stone placed at pos can kills other instead of suicide, return {-1,-1} if not, {x,y} of given stone otherwise
+Point_t stoneCanKill(Point_t pos, Stone_t stones[], int size_1D, singlePlayer_T currentPlayer); 
+
+int removeStone(Point_t pos, Stone_t stones[], int size_1D); //removes the stone at given position, return number of stones removed
+
+void setNeighbours(Stone_t neighbours[], Point_t pos, Stone_t stones[], int size_1D); //changes the neighbours array, sets the cell neighbours
