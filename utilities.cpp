@@ -179,7 +179,7 @@ void initializeMenu(const Point_t menuStartPoint, const Dimensions_t menuSize, c
 	gotoxy(menuStartPoint.x + 1, menuStartPoint.y + (k++));
 	cputs(IMPLEMENTED_FUNCTIONALITIES_STRING);
 	gotoxy(menuStartPoint.x + 1, menuStartPoint.y + (k++));
-	cputs("(a) (b) (c) ... ");
+	cputs("(a) (b) (c) (d) (e) (h) ... ");
 	gotoxy(menuStartPoint.x, menuStartPoint.y + (k++));
 	for (int i = 0; i < menuSize.x; i++) putch('-');
 	k += menuControlsDisplay({ menuStartPoint.x + 1, menuStartPoint.y + k});
@@ -218,6 +218,8 @@ int menuControlsDisplay(const Point_t controlDisplayStart)
 int updateMenu(const Point_t dynamicMenuStart, const Point_t cursorPosition, const Players_t Players)
 {
 	int k = 0;
+	const int bufferSize = 30;
+	char buffer[bufferSize];
 
 	textbackground(MENU_BACKGROUND);
 	textcolor(MENU_TEXT);
@@ -242,7 +244,8 @@ int updateMenu(const Point_t dynamicMenuStart, const Point_t cursorPosition, con
 	}
 
 	gotoxy(dynamicMenuStart.x, dynamicMenuStart.y + (k++));
-	printf("X: %d   Y: %d   ", cursorX, cursorY);
+	sprintf_s(buffer, "X: %d   Y: %d   ", cursorX, cursorY);
+	cputs(buffer);
 	k++;
 	gotoxy(dynamicMenuStart.x, dynamicMenuStart.y + (k++));
 	if (blackPlayer)
@@ -257,9 +260,11 @@ int updateMenu(const Point_t dynamicMenuStart, const Point_t cursorPosition, con
 	gotoxy(dynamicMenuStart.x, dynamicMenuStart.y+ (k++));
 	cputs("Scores:");
 	gotoxy(dynamicMenuStart.x, dynamicMenuStart.y+ (k++));
-	printf("Black: %d", scoreBlack);
+	sprintf_s(buffer, "Black: %d", scoreBlack);
+	cputs(buffer);
 	gotoxy(dynamicMenuStart.x, dynamicMenuStart.y+ (k++));
-	printf("White: %d", scoreWhite);
+	sprintf_s(buffer, "White: %d", scoreWhite);
+	cputs(buffer);
 
 	return k;
 }
@@ -305,7 +310,7 @@ bool constantsOK(const Constants_t constants)
 	if (GAME_BOARD_PADDING < 1) return false;
 	text_info info;
 	gettextinfo(&info);
-	if (constants.boardEndPoint.x > info.screenwidth || constants.boardEndPoint.y > info.screenheight) return false;
+	if (constants.boardEndPoint.x > info.screenwidth) return false;
 	return true;
 }
 bool rectanglesCollide(Point_t A_topLeft, Point_t A_bottomRight, Point_t B_topLeft, Point_t B_bottomRight)
@@ -317,6 +322,8 @@ bool rectanglesCollide(Point_t A_topLeft, Point_t A_bottomRight, Point_t B_topLe
 
 int chooseGameSize()
 {
+	textbackground(BLACK);
+	clrscr();
 	int size = 0, zn=0;
 	textbackground(LIGHTCYAN);
 	textcolor(BLACK);
@@ -379,8 +386,12 @@ int customGameSize()
 		textbackground(LIGHTCYAN);
 		textcolor(RED);
 		
-		printf("Board size: %dx%d  ", size, size);
-		
+		const int bufferSize = 30;
+		char buffer[bufferSize];
+
+		sprintf_s(buffer,"Board size: %dx%d  ", size, size);
+		cputs(buffer);
+
 		textbackground(BLACK);
 		textcolor(BLACK);
 
@@ -412,13 +423,22 @@ int customGameSize()
 
 void resetStones(Stone_t stones[], int oneDimSize)
 {
-	for (int y = 0; y < oneDimSize; y++)
+	if (stones == NULL) {
+		gotoxy(1, 1);
+		textcolor(WHITE);
+		textbackground(BLACK);
+		cputs("STWORZENIE TABLOCY KAMIENI NIE POWIODLO SIE!\n");
+	}
+	else 
 	{
-		for (int x = 0; x < oneDimSize; x++)
+		for (int y = 0; y < oneDimSize; y++)
 		{
-			stones[x + y * oneDimSize].color = empty;
-			stones[x + y * oneDimSize].position = { x+1,y+1 };
-			stones[x + y * oneDimSize].liberties = 0;
+			for (int x = 0; x < oneDimSize; x++)
+			{
+				stones[x + y * oneDimSize].color = empty;
+				stones[x + y * oneDimSize].position = { x + 1,y + 1 };
+				stones[x + y * oneDimSize].liberties = 0;
+			}
 		}
 	}
 }
@@ -561,4 +581,22 @@ void setNeighbours(Stone_t neighbours[], Point_t pos, Stone_t stones[], int size
 	neighbours[1] = findStoneByPos(stones, { pos.x, pos.y + 1 }, size_1D);
 	neighbours[2] = findStoneByPos(stones, { pos.x + 1, pos.y }, size_1D);
 	neighbours[3] = findStoneByPos(stones, { pos.x - 1, pos.y }, size_1D);
+}
+
+void initializeVariables(const int intersectionCount, Point_t &gameBoardStartPoint, GameBoardDimensions_t &gameBoardSize, Dimensions_t &menuSize)
+{
+	setGameBoardStartPoint(gameBoardStartPoint, BOARD_START_POINT);
+	setBoardDimensions(gameBoardSize, intersectionCount);
+	setMenuSize(menuSize);
+}
+void initializeCursor(Point_t &cursorPosition, Point_t &boardCursor, const Point_t gameBoardStartPoint) {
+	cursorPosition = { gameBoardStartPoint.x, gameBoardStartPoint.y };
+	boardCursor = { 1,1 };
+}
+
+void initializeEndPoints(Point_t &gameBoardEndPoint, Point_t &boardEndPoint, Point_t &menuEndPoint,
+const Dimensions_t menuSize, const EndPointsInit_t X, const GameBoardDimensions_t gameBoardSize) {
+	gameBoardEndPoint = { X.gameBoardStartPoint.x + gameBoardSize.x - 1, X.gameBoardStartPoint.y + gameBoardSize.y - 1 };
+	boardEndPoint = { X.boardStartPoint.x + gameBoardSize.wholeBoardSize.x - 1, X.boardStartPoint.y + gameBoardSize.wholeBoardSize.y - 1 };
+	menuEndPoint = { X.menuStartPoint.x + menuSize.x - 1, X.menuStartPoint.y + menuSize.y - 1 };
 }

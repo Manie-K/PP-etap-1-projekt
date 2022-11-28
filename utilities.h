@@ -49,6 +49,11 @@ struct Players_t
 	singlePlayer_T current;
 	singlePlayer_T enemy;
 };
+struct EndPointsInit_t {
+	Point_t gameBoardStartPoint;
+	Point_t boardStartPoint;
+	Point_t menuStartPoint;
+};
 
 //FUNCTIONS
 //draws the whole board + stones
@@ -100,3 +105,11 @@ Point_t stoneCanKill(Point_t pos, Stone_t stones[], int size_1D, singlePlayer_T 
 int removeStone(Point_t pos, Stone_t stones[], int size_1D); //removes the stone at given position, return number of stones removed
 
 void setNeighbours(Stone_t neighbours[], Point_t pos, Stone_t stones[], int size_1D); //changes the neighbours array, sets the cell neighbours
+
+//initialize mostly board variables
+void initializeVariables(const int intersectionCount, Point_t& gameBoardStartPoint, GameBoardDimensions_t& gameBoardSize, Dimensions_t& menuSize); 
+void initializeCursor(Point_t& cursorPosition, Point_t& boardCursor, Point_t gameBoardStartPoint); //initialize cursor varaibles
+
+//initialize endpoints
+void initializeEndPoints(Point_t& gameBoardEndPoint, Point_t& boardEndPoint, Point_t& menuEndPoint, const Dimensions_t menuSize,
+const EndPointsInit_t X, const GameBoardDimensions_t gameBoardSize);
