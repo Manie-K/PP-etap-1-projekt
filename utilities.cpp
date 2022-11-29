@@ -179,7 +179,9 @@ void initializeMenu(const Point_t menuStartPoint, const Dimensions_t menuSize, c
 	gotoxy(menuStartPoint.x + 1, menuStartPoint.y + (k++));
 	cputs(IMPLEMENTED_FUNCTIONALITIES_STRING);
 	gotoxy(menuStartPoint.x + 1, menuStartPoint.y + (k++));
-	cputs("(a) (b) (c) (d) (e) (h) ... ");
+	cputs("(a) (b) (c) (d) (e)     ... ");
+	gotoxy(menuStartPoint.x + 1, menuStartPoint.y + (k++));
+	cputs("(g) (h)         (k)     ... ");
 	gotoxy(menuStartPoint.x, menuStartPoint.y + (k++));
 	for (int i = 0; i < menuSize.x; i++) putch('-');
 	k += menuControlsDisplay({ menuStartPoint.x + 1, menuStartPoint.y + k});
@@ -201,7 +203,7 @@ int menuControlsDisplay(const Point_t controlDisplayStart)
 	gotoxy(controlDisplayStart.x, controlDisplayStart.y + (i++));
 	cputs("q - quit game");
 	gotoxy(controlDisplayStart.x, controlDisplayStart.y + (i++));
-	cputs("enter - confirm");
+	cputs("enter - end turn");
 	gotoxy(controlDisplayStart.x, controlDisplayStart.y + (i++));
 	cputs("escape - cancel");
 	gotoxy(controlDisplayStart.x, controlDisplayStart.y + (i++));
@@ -437,7 +439,6 @@ void resetStones(Stone_t stones[], int oneDimSize)
 			{
 				stones[x + y * oneDimSize].color = empty;
 				stones[x + y * oneDimSize].position = { x + 1,y + 1 };
-				stones[x + y * oneDimSize].liberties = 0;
 			}
 		}
 	}
@@ -474,7 +475,7 @@ Stone_t findStoneByPos(Stone_t stones[], Point_t pos, int size_1D)
 			}
 		}
 	}
-	return { {-1,-1}, empty, 0 }; //return a stone with {-1,-1} position
+	return { {-1,-1}, empty}; //return a stone with {-1,-1} position
 }
 bool checkStone(Point_t pos, Stone_t stones[], int size_1D, singlePlayer_T& currentPlayer)
 {
@@ -486,15 +487,13 @@ bool checkStone(Point_t pos, Stone_t stones[], int size_1D, singlePlayer_T& curr
 	}
 	else 
 	{
-		Point_t pointToBeKilled = stoneCanKill(pos, stones, size_1D, currentPlayer);
-		if (pointToBeKilled.x == -1) 
+		if(stoneCanKill(pos, stones, size_1D, currentPlayer))
 		{
-			return false;
+			return true;
 		}
 		else
 		{
-			currentPlayer.score += removeStone(pointToBeKilled, stones, size_1D);
-			return true;
+			return false;
 		}
 	}
 }
@@ -535,7 +534,7 @@ bool stoneHasLiberties(Point_t pos, Stone_t stones[], int size_1D, StonesColors_
 	return false;
 }
 
-Point_t stoneCanKill(Point_t pos, Stone_t stones[], int size_1D, singlePlayer_T currentPlayer)
+bool stoneCanKill(Point_t pos, Stone_t stones[], int size_1D, singlePlayer_T currentPlayer)
 {
 	//stones[] starts indexing from 0, board position starts from 1
 	int x = pos.x - 1;
@@ -558,10 +557,9 @@ Point_t stoneCanKill(Point_t pos, Stone_t stones[], int size_1D, singlePlayer_T 
 	stones[x + y * size_1D].color = empty;
 	if (k < 4)
 	{
-		//placing the stone would kill at least one enemy, giving this stone liberty
-		return neighbours[k].position;
+		return true;
 	}
-	else return { -1, -1};
+	else return false;
 
 }
 int removeStone(Point_t pos, Stone_t stones[], int size_1D)
@@ -569,6 +567,7 @@ int removeStone(Point_t pos, Stone_t stones[], int size_1D)
 	//stones[] starts indexing from 0, board position starts from 1
 	int x = pos.x - 1;
 	int y = pos.y - 1;
+	if (pos.x == -1) return 0;
 	if (stones[x + y * size_1D].color != empty) {
 		stones[x + y * size_1D].color = empty;
 		return 1; //later change when removing whole chains
@@ -583,9 +582,9 @@ void setNeighbours(Stone_t neighbours[], Point_t pos, Stone_t stones[], int size
 	neighbours[3] = findStoneByPos(stones, { pos.x - 1, pos.y }, size_1D);
 }
 
-void initializeVariables(const int intersectionCount, Point_t &gameBoardStartPoint, GameBoardDimensions_t &gameBoardSize, Dimensions_t &menuSize)
+void initializeVariables(const int intersectionCount, Point_t &gameBoardStartPoint, GameBoardDimensions_t &gameBoardSize, Dimensions_t &menuSize, Point_t boardStartPoint)
 {
-	setGameBoardStartPoint(gameBoardStartPoint, BOARD_START_POINT);
+	setGameBoardStartPoint(gameBoardStartPoint, boardStartPoint);
 	setBoardDimensions(gameBoardSize, intersectionCount);
 	setMenuSize(menuSize);
 }
@@ -599,4 +598,48 @@ const Dimensions_t menuSize, const EndPointsInit_t X, const GameBoardDimensions_
 	gameBoardEndPoint = { X.gameBoardStartPoint.x + gameBoardSize.x - 1, X.gameBoardStartPoint.y + gameBoardSize.y - 1 };
 	boardEndPoint = { X.boardStartPoint.x + gameBoardSize.wholeBoardSize.x - 1, X.boardStartPoint.y + gameBoardSize.wholeBoardSize.y - 1 };
 	menuEndPoint = { X.menuStartPoint.x + menuSize.x - 1, X.menuStartPoint.y + menuSize.y - 1 };
+}
+
+void copyStoneArray(Stone_t source[], Stone_t dest[], int oneDimSize)
+{
+	for (int y = 0; y < oneDimSize; y++)
+	{
+		for (int x = 0; x < oneDimSize; x++)
+		{
+			dest[x+y*oneDimSize].color = source[x + y * oneDimSize].color;
+		}
+	}
+}
+void getRemovedStonesBack(Point_t pos, Stone_t stones[], Stone_t backup[], int oneDimSize)
+{
+	int x = pos.x - 1;
+	int y = pos.y - 1;
+	int index = x+1 + y * oneDimSize;
+
+	if (index >= 0 && index <= oneDimSize * oneDimSize - 1)
+		stones[index].color = backup[index].color;
+
+	index = x-1 + y * oneDimSize;
+	if (index >= 0 && index <= oneDimSize * oneDimSize - 1)
+		stones[index].color = backup[index].color;
+
+	index = x + (y-1) * oneDimSize;
+	if (index >= 0 && index <= oneDimSize * oneDimSize - 1)
+		stones[index].color = backup[index].color;
+
+	index = x + (y+1) * oneDimSize;
+	if (index >= 0 && index <= oneDimSize * oneDimSize - 1)
+		stones[index].color = backup[index].color;
+}
+bool KoRuleOK(Stone_t stones[], Stone_t KoRule[], int oneDimSize)
+{
+	for (int y = 0; y < oneDimSize; y++)
+	{
+		for (int x = 0; x < oneDimSize; x++)
+		{
+			if(KoRule[x + y * oneDimSize].color != stones[x + y * oneDimSize].color)
+				return true;
+		}
+	}
+	return false;
 }

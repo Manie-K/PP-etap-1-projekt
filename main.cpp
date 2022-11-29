@@ -5,6 +5,7 @@
 
 int main(){
 	//TODO
+	// Regu³a KO - na razie nie dziala, poprawic sposob zapisywania poprzedniej sytuacji na planszy, i wczytywania kamieni z przed postawiania nowego
 	//PLANSZA POZA GRANICA NIE DZIALA // SCROLL
 
 #ifndef __cplusplus
@@ -20,11 +21,19 @@ int main(){
 	textbackground(BLACK);
 	textcolor(7);
 
+
+	//required
 	Stone_t* stones = NULL;
+	Stone_t* koRule = NULL;
+	Stone_t* koRuleBuffer = NULL;
 	Players_t players;
 	Point_t menuStartPoint = MENU_START_POINT;
 	Point_t boardStartPoint = BOARD_START_POINT;
 	int intersectionCount;
+	bool firstRound = true;
+	unsigned int handicap = 0;
+	//are set from required ones
+	unsigned int stonesArraySize;
 	Point_t gameBoardStartPoint;
 	GameBoardDimensions_t gameBoardSize;
 	Dimensions_t menuSize;
@@ -35,15 +44,19 @@ int main(){
 	Point_t boardCursor;
 
 	intersectionCount = chooseGameSize();
-	initializeVariables(intersectionCount, gameBoardStartPoint, gameBoardSize, menuSize);
+	initializeVariables(intersectionCount, gameBoardStartPoint, gameBoardSize, menuSize, boardStartPoint);
 	initializeCursor(cursorPosition, boardCursor, gameBoardStartPoint);
 
 	initializeEndPoints(gameBoardEndPoint, boardEndPoint, menuEndPoint, menuSize, 
 	{ gameBoardStartPoint, boardStartPoint, menuStartPoint }, gameBoardSize);
 
-	unsigned int stonesArraySize = intersectionCount * intersectionCount;
+	stonesArraySize = intersectionCount * intersectionCount;
 	stones = new Stone_t[stonesArraySize];
+	koRule = new Stone_t[stonesArraySize];
+	koRuleBuffer = new Stone_t[stonesArraySize];
 	resetStones(stones, intersectionCount);
+	resetStones(koRule, intersectionCount);
+	resetStones(koRuleBuffer, intersectionCount);
 	
 	players = DEFAULT_PLAYER_AND_SCORES;
 
@@ -67,7 +80,7 @@ int main(){
 
 	//INITIAL DRAW
 	drawBoard(boardStartPoint, gameBoardStartPoint, gameBoardSize, stones, intersectionCount, 1);
-	initializeMenu(MENU_START_POINT, menuSize, boardCursor);
+	initializeMenu(menuStartPoint, menuSize, boardCursor);
 
 	do {
 
@@ -106,16 +119,32 @@ int main(){
 		{
 			if (checkStone(boardCursor, stones, intersectionCount, players.current))
 			{
+				int score = 0;
 				placeStone(boardCursor, stones, players.current, intersectionCount);
 
 				Stone_t* neighbours = new Stone_t[NEIGHBOURS_COUNT];
 				setNeighbours(neighbours, boardCursor, stones, intersectionCount);
-
+				
 				for (int k = 0; k < NEIGHBOURS_COUNT; k++) {
 					if (!stoneHasLiberties(neighbours[k].position, stones, intersectionCount, neighbours[k].color))
-						players.current.score += removeStone(neighbours[k].position, stones, intersectionCount);
+						score += removeStone(neighbours[k].position, stones, intersectionCount);
 				}
-				changePlayers(players);
+				if (firstRound) { //initial black advantage
+					handicap++;
+				}
+				else {
+					if (KoRuleOK(stones, koRule, intersectionCount)) {
+						copyStoneArray(koRuleBuffer, koRule, intersectionCount);
+						copyStoneArray(stones, koRuleBuffer, intersectionCount);
+						players.current.score += score;
+						changePlayers(players);
+					}
+					else
+					{
+						removeStone(boardCursor, stones, intersectionCount);
+						getRemovedStonesBack(boardCursor, stones, koRuleBuffer, intersectionCount);
+					}
+				}
 				delete[] neighbours;
 			}
 		}
@@ -123,18 +152,23 @@ int main(){
 		{
 			clrscr();
 			delete[] stones;
+			delete[] koRule;
+			delete[] koRuleBuffer;
 
 			intersectionCount = chooseGameSize();
-			initializeVariables(intersectionCount, gameBoardStartPoint, gameBoardSize, menuSize);
+			initializeVariables(intersectionCount, gameBoardStartPoint, gameBoardSize, menuSize, boardStartPoint);
 			initializeCursor(cursorPosition, boardCursor, gameBoardStartPoint);
 
 			initializeEndPoints(gameBoardEndPoint, boardEndPoint, menuEndPoint, menuSize,
 				{ gameBoardStartPoint, boardStartPoint, menuStartPoint }, gameBoardSize);
 
-			unsigned int stonesArraySize = intersectionCount * intersectionCount;
+			stonesArraySize = intersectionCount * intersectionCount;
 			stones = new Stone_t[stonesArraySize];
+			koRule = new Stone_t[stonesArraySize];
+			koRuleBuffer = new Stone_t[stonesArraySize];
 			resetStones(stones, intersectionCount);
-
+			resetStones(koRule, intersectionCount);
+			resetStones(koRuleBuffer, intersectionCount);
 			players = DEFAULT_PLAYER_AND_SCORES;
 
 			//CHECKING THE INITIAL VALUES
@@ -157,8 +191,20 @@ int main(){
 
 			//INITIAL DRAW
 			drawBoard(boardStartPoint, gameBoardStartPoint, gameBoardSize, stones, intersectionCount, 1);
-			initializeMenu(MENU_START_POINT, menuSize, boardCursor);
+			initializeMenu(menuStartPoint, menuSize, boardCursor);
 
+		}
+		else if (zn == '\r')//enter
+		{
+			changePlayers(players);
+			if (firstRound)
+			{
+				firstRound = false;
+			}
+			else 
+			{
+				players.current.score++;
+			}
 		}
 	} while (zn != 'q');
 
@@ -168,6 +214,8 @@ int main(){
 	_setcursortype(_NORMALCURSOR);	
 
 	delete[] stones;
+	delete[] koRule;
+	delete[] koRuleBuffer;
 
 	return 0;
 }

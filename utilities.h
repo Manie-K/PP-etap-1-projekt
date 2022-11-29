@@ -36,7 +36,6 @@ struct Stone_t
 {
 	Point_t position;
 	StonesColors_enum color;
-	int liberties;
 };
 struct singlePlayer_T
 {
@@ -100,16 +99,20 @@ void changePlayers(Players_t& players); //swaps players (current and enemy)
 bool stoneHasLiberties(Point_t pos, Stone_t stones[], int size_1D, StonesColors_enum currentPlayerStoneColor);
 
 //checks if this stone placed at pos can kills other instead of suicide, return {-1,-1} if not, {x,y} of given stone otherwise
-Point_t stoneCanKill(Point_t pos, Stone_t stones[], int size_1D, singlePlayer_T currentPlayer); 
+bool stoneCanKill(Point_t pos, Stone_t stones[], int size_1D, singlePlayer_T currentPlayer); 
 
 int removeStone(Point_t pos, Stone_t stones[], int size_1D); //removes the stone at given position, return number of stones removed
 
 void setNeighbours(Stone_t neighbours[], Point_t pos, Stone_t stones[], int size_1D); //changes the neighbours array, sets the cell neighbours
 
 //initialize mostly board variables
-void initializeVariables(const int intersectionCount, Point_t& gameBoardStartPoint, GameBoardDimensions_t& gameBoardSize, Dimensions_t& menuSize); 
+void initializeVariables(const int intersectionCount, Point_t& gameBoardStartPoint, GameBoardDimensions_t& gameBoardSize, Dimensions_t& menuSize, Point_t boardStartPoint);
 void initializeCursor(Point_t& cursorPosition, Point_t& boardCursor, Point_t gameBoardStartPoint); //initialize cursor varaibles
 
 //initialize endpoints
 void initializeEndPoints(Point_t& gameBoardEndPoint, Point_t& boardEndPoint, Point_t& menuEndPoint, const Dimensions_t menuSize,
 const EndPointsInit_t X, const GameBoardDimensions_t gameBoardSize);
+
+void copyStoneArray(Stone_t source[], Stone_t dest[], int oneDimSize); //copies stones array into ko rule array (for next round)
+void getRemovedStonesBack(Point_t pos, Stone_t stones[], Stone_t backup[], int oneDimSize); //reloads the neigbours stones
+bool KoRuleOK(Stone_t stones[], Stone_t KoRule[], int oneDimSize); //checks if the ko rule takes place (return false if yes)
