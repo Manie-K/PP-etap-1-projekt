@@ -5,7 +5,6 @@
 
 int main(){
 	//TODO
-	// Regu³a KO - na razie nie dziala, poprawic sposob zapisywania poprzedniej sytuacji na planszy, i wczytywania kamieni z przed postawiania nowego
 	//PLANSZA POZA GRANICA NIE DZIALA // SCROLL
 
 #ifndef __cplusplus
@@ -62,21 +61,9 @@ int main(){
 
 	//CHECKING THE INITIAL VALUES
 	if (rectanglesCollide(menuStartPoint, menuEndPoint, boardStartPoint, boardEndPoint))
-	{		
-		gotoxy(1, 1);
-		textcolor(WHITE);
-		textbackground(BLACK);
-		cputs("MENU zachodzi na PLANSZE!\n");
 		return -1;
-	}
-	if (!constantsOK({ boardStartPoint, menuStartPoint, boardEndPoint }))
-	{
-		gotoxy(1, 1);
-		textcolor(WHITE);
-		textbackground(BLACK);
-		cputs("BLEDNE WARTOSCI STARTOWE!\n");
+	if (!constantsOK({ boardStartPoint, menuStartPoint, boardEndPoint}))
 		return -1;
-	}
 
 	//INITIAL DRAW
 	drawBoard(boardStartPoint, gameBoardStartPoint, gameBoardSize, stones, intersectionCount, 1);
@@ -84,7 +71,7 @@ int main(){
 
 	do {
 
-		boardCursor = {((cursorPosition.x-gameBoardStartPoint.x) / (CELL_WIDTH + 1)) + 1, ((cursorPosition.y - gameBoardStartPoint.y) / 2) + 1};
+		boardCursor = { ((cursorPosition.x - gameBoardStartPoint.x) / (CELL_WIDTH + 1)) + 1, ((cursorPosition.y - gameBoardStartPoint.y) / 2) + 1 };
 
 		drawBoard(boardStartPoint, gameBoardStartPoint, gameBoardSize, stones, intersectionCount, 0);
 		updateMenu({ menuStartPoint.x + 1,menuStartPoint.y + DYNAMIC_MENU_Y_OFFSET }, boardCursor, players);
@@ -93,6 +80,7 @@ int main(){
 		zn = getch();
 
 		if (zn == 0) {	
+			menuCleanBottomInfo(menuStartPoint, menuEndPoint);
 			zn = getch();		
 			if (zn == 0x48)
 			{
@@ -173,22 +161,10 @@ int main(){
 
 			//CHECKING THE INITIAL VALUES
 			if (rectanglesCollide(menuStartPoint, menuEndPoint, boardStartPoint, boardEndPoint))
-			{
-				gotoxy(1, 1);
-				textcolor(WHITE);
-				textbackground(BLACK);
-				cputs("MENU zachodzi na PLANSZE!\n");
 				return -1;
-			}
-			if (!constantsOK({ boardStartPoint, menuStartPoint, boardEndPoint }))
-			{
-				gotoxy(1, 1);
-				textcolor(WHITE);
-				textbackground(BLACK);
-				cputs("BLEDNE WARTOSCI STARTOWE!\n");
+			if (!constantsOK({ boardStartPoint, menuStartPoint, boardEndPoint}))
 				return -1;
-			}
-
+			
 			//INITIAL DRAW
 			drawBoard(boardStartPoint, gameBoardStartPoint, gameBoardSize, stones, intersectionCount, 1);
 			initializeMenu(menuStartPoint, menuSize, boardCursor);
@@ -205,6 +181,79 @@ int main(){
 			{
 				players.current.score++;
 			}
+		}
+		else if (zn == 's')
+		{
+			char* fileName = new char(menuSize.x-3);
+			if (getName(fileName, menuStartPoint, menuEndPoint, menuSize) != -1)
+			{
+				GameStateSave_t* gameState = new GameStateSave_t;
+				gameState->stones = stones;
+				gameState->koRule = koRule;
+				gameState->koRuleBuffer = koRuleBuffer;
+				gameState->players = players;
+				gameState->menuStartPoint = menuStartPoint;
+				gameState->boardStartPoint = boardStartPoint;
+				gameState->intersectionCount = intersectionCount;
+				gameState->firstRound = firstRound;
+				gameState->handicap = handicap;
+
+				if(!saveToFile(gameState, fileName)){
+					textcolor(RED);
+					textbackground(MENU_BACKGROUND);
+					gotoxy(menuStartPoint.x + 1, menuStartPoint.y + MENU_HEIGHT - 2);
+					cputs("DID NOT SAVE TO FILE");
+					textcolor(BLACK);
+				}
+				else {
+					textcolor(GREEN);
+					textbackground(MENU_BACKGROUND);
+					gotoxy(menuStartPoint.x + 1, menuStartPoint.y + MENU_HEIGHT - 2);
+					cputs("SUCCESSFULLY SAVED");
+					textbackground(BLACK);
+					textcolor(BLACK);
+				}
+				delete gameState;
+			}
+			//delete fileName;
+		}
+		else if (zn == 'l')
+		{
+			char* fileName = new char(menuSize.x - 3);
+			if (getName(fileName, menuStartPoint, menuEndPoint, menuSize) != -1)
+			{ 
+				GameStateSave_t* gameState = new GameStateSave_t;
+				if (!loadFromFile(gameState, fileName)) {
+					textcolor(RED);
+					textbackground(MENU_BACKGROUND);
+					gotoxy(menuStartPoint.x + 1, menuStartPoint.y + MENU_HEIGHT - 2);
+					cputs("DID NOT LOAD FROM FILE");
+					textcolor(BLACK);
+				}
+				else {
+					stones = gameState->stones;
+					koRule = gameState->koRule;
+					koRuleBuffer = gameState->koRuleBuffer;
+					players = gameState->players;
+					menuStartPoint = gameState->menuStartPoint;
+					boardStartPoint = gameState->boardStartPoint;
+					intersectionCount = gameState->intersectionCount;
+					firstRound = gameState->firstRound;
+					handicap = gameState->handicap;
+
+					initializeVariables(intersectionCount, gameBoardStartPoint, gameBoardSize, menuSize, boardStartPoint);
+					initializeCursor(cursorPosition, boardCursor, gameBoardStartPoint);
+
+					initializeEndPoints(gameBoardEndPoint, boardEndPoint, menuEndPoint, menuSize,
+						{ gameBoardStartPoint, boardStartPoint, menuStartPoint }, gameBoardSize);
+					stonesArraySize = intersectionCount * intersectionCount;
+
+					drawBoard(boardStartPoint, gameBoardStartPoint, gameBoardSize, stones, intersectionCount, 1);
+					initializeMenu(menuStartPoint, menuSize, boardCursor);
+				}
+				delete gameState;
+			}
+			//delete fileName;
 		}
 	} while (zn != 'q');
 

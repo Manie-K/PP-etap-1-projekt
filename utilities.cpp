@@ -1,4 +1,5 @@
-﻿#include "utilities.h"
+﻿#define _CRT_SECURE_NO_WARNINGS
+#include "utilities.h"
 #include "conio2.h"
 #include<stdio.h>
 
@@ -307,18 +308,40 @@ bool constantsOK(const Constants_t constants)
 	if (constants.boardStart.x < 1 ||
 		constants.boardStart.y < 1 ||
 		constants.menuStart.x < 1 ||
-		constants.menuStart.y < 1)
+		constants.menuStart.y < 1) {
+		gotoxy(1, 1);
+		textcolor(RED);
+		textbackground(BLACK);
+		cputs("Menu or board outside of window!\n");
 		return false;
-	if (GAME_BOARD_PADDING < 1) return false;
+	}
+	if (GAME_BOARD_PADDING < 1) {
+		gotoxy(1, 1);
+		textcolor(RED);
+		textbackground(BLACK);
+		cputs("Menu padding less than 1!\n");
+		return false;
+	}
 	text_info info;
 	gettextinfo(&info);
-	if (constants.boardEndPoint.x > info.screenwidth) return false;
+	if (constants.boardEndPoint.x > info.screenwidth)
+	{
+		return false;//scrolling
+		gotoxy(1, 1);
+		textcolor(RED);
+		textbackground(BLACK);
+		cputs("Board outside of window(doesn't fit)!\n");
+	}
 	return true;
 }
 bool rectanglesCollide(Point_t A_topLeft, Point_t A_bottomRight, Point_t B_topLeft, Point_t B_bottomRight)
 {
 	if (A_topLeft.x > B_bottomRight.x || B_topLeft.x > A_bottomRight.x) return false; //checks horizontally
 	if (A_topLeft.y > B_bottomRight.y || B_topLeft.y > A_bottomRight.y) return false; //checks vertically
+	gotoxy(1, 1);
+	textcolor(RED);
+	textbackground(BLACK);
+	cputs("Menu on top of board!\n");
 	return true;
 }
 
@@ -477,7 +500,7 @@ Stone_t findStoneByPos(Stone_t stones[], Point_t pos, int size_1D)
 	}
 	return { {-1,-1}, empty}; //return a stone with {-1,-1} position
 }
-bool checkStone(Point_t pos, Stone_t stones[], int size_1D, singlePlayer_T& currentPlayer)
+bool checkStone(Point_t pos, Stone_t stones[], int size_1D, SinglePlayer_T& currentPlayer)
 {
 	Stone_t thisStone = findStoneByPos(stones, pos, size_1D);
 	if (thisStone.color != empty) return false;
@@ -497,7 +520,7 @@ bool checkStone(Point_t pos, Stone_t stones[], int size_1D, singlePlayer_T& curr
 		}
 	}
 }
-void placeStone(Point_t pos, Stone_t stones[], singlePlayer_T player, int size_1D)
+void placeStone(Point_t pos, Stone_t stones[], SinglePlayer_T player, int size_1D)
 {
 	//stones[] starts indexing from 0, board position starts from 1
 	int x = pos.x - 1;
@@ -506,7 +529,7 @@ void placeStone(Point_t pos, Stone_t stones[], singlePlayer_T player, int size_1
 }
 void changePlayers(Players_t &players)
 {
-	singlePlayer_T temp = { players.current.playerColor, players.current.stoneColor ,players.current.score };
+	SinglePlayer_T temp = { players.current.playerColor, players.current.stoneColor ,players.current.score };
 	players.current.playerColor = players.enemy.playerColor;
 	players.current.stoneColor = players.enemy.stoneColor;
 	players.current.score = players.enemy.score;
@@ -534,7 +557,7 @@ bool stoneHasLiberties(Point_t pos, Stone_t stones[], int size_1D, StonesColors_
 	return false;
 }
 
-bool stoneCanKill(Point_t pos, Stone_t stones[], int size_1D, singlePlayer_T currentPlayer)
+bool stoneCanKill(Point_t pos, Stone_t stones[], int size_1D, SinglePlayer_T currentPlayer)
 {
 	//stones[] starts indexing from 0, board position starts from 1
 	int x = pos.x - 1;
@@ -642,4 +665,79 @@ bool KoRuleOK(Stone_t stones[], Stone_t KoRule[], int oneDimSize)
 		}
 	}
 	return false;
+}
+
+void menuCleanBottomInfo(Point_t menuStart, Point_t menuEnd)
+{
+	textbackground(MENU_BACKGROUND);
+	for (int n = 0; n < 2; n++) {
+		for (int m = menuStart.x + 1; m <= menuEnd.x - 1; m++)
+		{
+			gotoxy(m, menuStart.y + MENU_HEIGHT - 2 + n);
+			putch(' ');
+		}
+	}
+	textbackground(BLACK);
+}
+int getName(char* name, Point_t menuStart, Point_t menuEnd, Dimensions_t menuSize)
+{
+	int zn;
+	textbackground(MENU_BACKGROUND);
+	textcolor(RED);
+	const int nameWidth = menuSize.x - 4;
+
+	gotoxy(menuStart.x + 1, menuStart.y + MENU_HEIGHT - 2);
+	cputs("Enter file name below:");
+	gotoxy(menuStart.x + 1, menuStart.y + MENU_HEIGHT - 1);
+	putch('<');
+	gotoxy(menuStart.x + nameWidth + 2, menuStart.y + MENU_HEIGHT - 1);
+	putch('>');
+	gotoxy(menuStart.x + 2, menuStart.y + MENU_HEIGHT - 1);
+	for (int i = 0, x = 0; x < nameWidth; x++, i++)
+	{
+		zn = getche();
+		if (zn == '\x1b') //escape = cancel action
+		{
+			menuCleanBottomInfo(menuStart, menuEnd);
+			return -1;
+		}
+		name[i] = zn;
+		if (zn == '\r')
+		{
+			name[i] = '\0';
+			menuCleanBottomInfo(menuStart, menuEnd);
+			return 0;
+		}
+		else if (i == nameWidth - 1)
+		{
+			name[++i] = '\0';
+			menuCleanBottomInfo(menuStart, menuEnd);
+			return 0;
+		}
+	}
+	return 0;
+}
+bool saveToFile(GameStateSave_t* gameState, char* name)
+{
+	FILE* f;
+	f = fopen(name, "w");
+	if (f == NULL) 
+	{ 
+		return false;
+	}
+	int x = fwrite(gameState, sizeof(GameStateSave_t), 1, f);
+	fclose(f);
+	return x != 0;
+}
+bool loadFromFile(GameStateSave_t* gameState, char* name)
+{
+	FILE* f;
+	f = fopen(name, "r");
+	if (f == NULL)
+	{
+		return false;
+	}
+	int x = fread(gameState, sizeof(GameStateSave_t), 1, f);
+	fclose(f);
+	return x != 0;
 }

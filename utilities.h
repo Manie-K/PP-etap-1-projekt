@@ -37,7 +37,7 @@ struct Stone_t
 	Point_t position;
 	StonesColors_enum color;
 };
-struct singlePlayer_T
+struct SinglePlayer_T
 {
 	PlayersColors_enum playerColor;
 	StonesColors_enum stoneColor;
@@ -45,13 +45,25 @@ struct singlePlayer_T
 };
 struct Players_t
 {
-	singlePlayer_T current;
-	singlePlayer_T enemy;
+	SinglePlayer_T current;
+	SinglePlayer_T enemy;
 };
 struct EndPointsInit_t {
 	Point_t gameBoardStartPoint;
 	Point_t boardStartPoint;
 	Point_t menuStartPoint;
+};
+struct GameStateSave_t
+{
+	Stone_t* stones;
+	Stone_t* koRule;
+	Stone_t* koRuleBuffer;
+	Players_t players;
+	Point_t menuStartPoint;
+	Point_t boardStartPoint;
+	int intersectionCount;
+	bool firstRound;
+	unsigned int handicap;
 };
 
 //FUNCTIONS
@@ -84,22 +96,22 @@ bool constantsOK(Constants_t constants); //checks if the initial constants are o
 bool rectanglesCollide(Point_t A_topLeft, Point_t A_bottomRight, Point_t B_topLeft, Point_t B_bottomRight);
 
 int chooseGameSize(); //sets the size of the game board (intersection count)
-int customGameSize(); //pics custom game board size
+int customGameSize(); //picks custom game board size
 
 void resetStones(Stone_t stones[], int oneDimSize); //sets all intersections to EMPTY
 
 void drawCursor(Point_t cursorPosition); //draws cursor
 
 Stone_t findStoneByPos(Stone_t stones[], Point_t pos, int size_1D); //return the point with this position or {-1, -1} if not found (out of board)
-bool checkStone(Point_t pos, Stone_t stones[], int size_1D, singlePlayer_T& currentPlayer); //checks if stone can be placed here
-void placeStone(Point_t pos, Stone_t stones[], singlePlayer_T player, int size_1D); //add a stone to STONE array which will be later drawn 
+bool checkStone(Point_t pos, Stone_t stones[], int size_1D, SinglePlayer_T& currentPlayer); //checks if stone can be placed here
+void placeStone(Point_t pos, Stone_t stones[], SinglePlayer_T player, int size_1D); //add a stone to STONE array which will be later drawn 
 void changePlayers(Players_t& players); //swaps players (current and enemy)
 
 //checks if stone at this position has liberties (true or false)
 bool stoneHasLiberties(Point_t pos, Stone_t stones[], int size_1D, StonesColors_enum currentPlayerStoneColor);
 
 //checks if this stone placed at pos can kills other instead of suicide, return {-1,-1} if not, {x,y} of given stone otherwise
-bool stoneCanKill(Point_t pos, Stone_t stones[], int size_1D, singlePlayer_T currentPlayer); 
+bool stoneCanKill(Point_t pos, Stone_t stones[], int size_1D, SinglePlayer_T currentPlayer); 
 
 int removeStone(Point_t pos, Stone_t stones[], int size_1D); //removes the stone at given position, return number of stones removed
 
@@ -116,3 +128,7 @@ const EndPointsInit_t X, const GameBoardDimensions_t gameBoardSize);
 void copyStoneArray(Stone_t source[], Stone_t dest[], int oneDimSize); //copies stones array into ko rule array (for next round)
 void getRemovedStonesBack(Point_t pos, Stone_t stones[], Stone_t backup[], int oneDimSize); //reloads the neigbours stones
 bool KoRuleOK(Stone_t stones[], Stone_t KoRule[], int oneDimSize); //checks if the ko rule takes place (return false if yes)
+void menuCleanBottomInfo(Point_t menuStart, Point_t menuEnd); //cleans bottom part of the menu
+int getName(char* name, Point_t menuStart, Point_t menuEnd, Dimensions_t menuSize); //draws and gets the name of the file //-1 if cancelled
+bool saveToFile(GameStateSave_t* gameState, char* name); //saves the gameState struct to file, returns false if error occurs
+bool loadFromFile(GameStateSave_t* gameState, char* name); //loads the gameState from file, returns false if error occurs

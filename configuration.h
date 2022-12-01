@@ -30,7 +30,7 @@
 #define CELL_WIDTH 3 //width of single character (3 to make it look better)
 #define NAME_AND_ALBUM "Maciej Góralczyk 193302" //my name and student album number
 #define IMPLEMENTED_FUNCTIONALITIES_STRING "Implemented functionalities:" //used later to calculate menu width
-#define MENU_HEIGHT 25 //sets menu height (manually, beacuse it is dependant of number of functionalities and controls
+#define MENU_HEIGHT 27 //sets menu height (manually, beacuse it is dependant of number of functionalities and controls
 #define DYNAMIC_MENU_Y_OFFSET 17 //where dynamic menu starts
 #define DEFAULT_PLAYER_AND_SCORES { {black, blackStone,0}, {white,whiteStone ,0}} //initial current player and scores
 #define NEIGHBOURS_COUNT 4 //always 4, even if near border, so no need to change
