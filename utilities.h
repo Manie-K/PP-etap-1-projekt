@@ -55,9 +55,6 @@ struct EndPointsInit_t {
 };
 struct GameStateSave_t
 {
-	Stone_t* stones;
-	Stone_t* koRule;
-	Stone_t* koRuleBuffer;
 	Players_t players;
 	Point_t menuStartPoint;
 	Point_t boardStartPoint;
@@ -130,5 +127,6 @@ void getRemovedStonesBack(Point_t pos, Stone_t stones[], Stone_t backup[], int o
 bool KoRuleOK(Stone_t stones[], Stone_t KoRule[], int oneDimSize); //checks if the ko rule takes place (return false if yes)
 void menuCleanBottomInfo(Point_t menuStart, Point_t menuEnd); //cleans bottom part of the menu
 int getName(char* name, Point_t menuStart, Point_t menuEnd, Dimensions_t menuSize); //draws and gets the name of the file //-1 if cancelled
-bool saveToFile(GameStateSave_t* gameState, char* name); //saves the gameState struct to file, returns false if error occurs
-bool loadFromFile(GameStateSave_t* gameState, char* name); //loads the gameState from file, returns false if error occurs
+bool saveVarsToFile(GameStateSave_t* gameState, char* name); //saves the gameState struct to file, returns false if error occurs
+bool saveArraysToFile(char* name, int size, Stone_t stones[], Stone_t ko[], Stone_t koBuffer[]); //saves the arrays to file, returns false if error occurs
+bool loadFromFile(GameStateSave_t* gameState, char* name, Stone_t*& stones, Stone_t*& koRule, Stone_t*& koRuleBuffer); //loads the gameState++arrays from file, returns false if error occurs

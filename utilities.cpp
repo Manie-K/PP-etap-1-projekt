@@ -717,7 +717,7 @@ int getName(char* name, Point_t menuStart, Point_t menuEnd, Dimensions_t menuSiz
 	}
 	return 0;
 }
-bool saveToFile(GameStateSave_t* gameState, char* name)
+bool saveVarsToFile(GameStateSave_t* gameState, char* name)
 {
 	FILE* f;
 	f = fopen(name, "w");
@@ -727,7 +727,20 @@ bool saveToFile(GameStateSave_t* gameState, char* name)
 	fclose(f);
 	return x != 0;
 }
-bool loadFromFile(GameStateSave_t* gameState, char* name)
+bool saveArraysToFile(char* name, int size, Stone_t stones[], Stone_t ko[], Stone_t koBuffer[])
+{
+	FILE* f;
+	f = fopen(name, "a"); //appending to the file, gamestate saved there already
+	if (f == NULL)
+		return false;
+	int a = fwrite(stones, sizeof(Stone_t), size, f);
+	int b = fwrite(ko, sizeof(Stone_t), size, f);
+	int c = fwrite(koBuffer, sizeof(Stone_t), size, f);
+	fclose(f);
+	if (a == 0 || b == 0 || c == 0) return false;
+	else return true;
+}
+bool loadFromFile(GameStateSave_t* gameState, char* name, Stone_t *&stones, Stone_t *&koRule, Stone_t *&koRuleBuffer)
 {
 	FILE* f;
 	f = fopen(name, "r");
@@ -736,6 +749,14 @@ bool loadFromFile(GameStateSave_t* gameState, char* name)
 		return false;
 	}
 	int x = fread(gameState, sizeof(GameStateSave_t), 1, f);
+	int size = gameState->intersectionCount * gameState->intersectionCount;
+	stones = new Stone_t[size];
+	koRule = new Stone_t[size];
+	koRuleBuffer = new Stone_t[size];
+	int a = fread(stones, sizeof(Stone_t), size, f);
+	int b = fread(koRule, sizeof(Stone_t), size, f);
+	int c = fread(koRuleBuffer, sizeof(Stone_t), size, f);
 	fclose(f);
-	return x != 0;
+
+	return (x != 0 && a != 0 && b != 0 && c != 0);
 }

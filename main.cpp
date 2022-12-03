@@ -187,9 +187,6 @@ int main(){
 			if (getName(fileName, menuStartPoint, menuEndPoint, menuSize) != -1)
 			{
 				GameStateSave_t* gameState = new GameStateSave_t;
-				gameState->stones = stones;
-				gameState->koRule = koRule;
-				gameState->koRuleBuffer = koRuleBuffer;
 				gameState->players = players;
 				gameState->menuStartPoint = menuStartPoint;
 				gameState->boardStartPoint = boardStartPoint;
@@ -197,20 +194,31 @@ int main(){
 				gameState->firstRound = firstRound;
 				gameState->handicap = handicap;
 
-				if(!saveToFile(gameState, fileName)){
+				if(!saveVarsToFile(gameState, fileName)){
 					textcolor(RED);
 					textbackground(MENU_BACKGROUND);
 					gotoxy(menuStartPoint.x + 1, menuStartPoint.y + MENU_HEIGHT - 2);
 					cputs("DID NOT SAVE TO FILE");
+					textbackground(BLACK);
 					textcolor(BLACK);
 				}
 				else {
-					textcolor(DARKGRAY);
-					textbackground(MENU_BACKGROUND);
-					gotoxy(menuStartPoint.x + 1, menuStartPoint.y + MENU_HEIGHT - 2);
-					cputs("SUCCESSFULLY SAVED");
-					textbackground(BLACK);
-					textcolor(BLACK);
+					if (saveArraysToFile(fileName, stonesArraySize, stones, koRule, koRuleBuffer)) {
+						textcolor(DARKGRAY);
+						textbackground(MENU_BACKGROUND);
+						gotoxy(menuStartPoint.x + 1, menuStartPoint.y + MENU_HEIGHT - 2);
+						cputs("SUCCESSFULLY SAVED");
+						textbackground(BLACK);
+						textcolor(BLACK);
+					}
+					else {
+						textcolor(RED);
+						textbackground(MENU_BACKGROUND);
+						gotoxy(menuStartPoint.x + 1, menuStartPoint.y + MENU_HEIGHT - 2);
+						cputs("ERROR WHILE SAVING TO FILE");
+						textbackground(BLACK);
+						textcolor(BLACK);
+					}
 				}
 				delete gameState;
 			}
@@ -221,8 +229,11 @@ int main(){
 			char* fileName = new char[menuSize.x - 3];
 			if (getName(fileName, menuStartPoint, menuEndPoint, menuSize) != -1)
 			{ 
+				delete[] stones;
+				delete[] koRuleBuffer;
+				delete[] koRule;
 				GameStateSave_t* gameState = new GameStateSave_t;
-				if (!loadFromFile(gameState, fileName)) {
+				if (!loadFromFile(gameState, fileName, stones, koRule, koRuleBuffer)) {
 					textcolor(RED);
 					textbackground(MENU_BACKGROUND);
 					gotoxy(menuStartPoint.x + 1, menuStartPoint.y + MENU_HEIGHT - 2);
@@ -230,13 +241,10 @@ int main(){
 					textcolor(BLACK);
 				}
 				else {
-					stones = gameState->stones;
-					koRule = gameState->koRule;
-					koRuleBuffer = gameState->koRuleBuffer;
+					intersectionCount = gameState->intersectionCount;					
 					players = gameState->players;
 					menuStartPoint = gameState->menuStartPoint;
 					boardStartPoint = gameState->boardStartPoint;
-					intersectionCount = gameState->intersectionCount;
 					firstRound = gameState->firstRound;
 					handicap = gameState->handicap;
 
@@ -247,6 +255,7 @@ int main(){
 						{ gameBoardStartPoint, boardStartPoint, menuStartPoint }, gameBoardSize);
 					stonesArraySize = intersectionCount * intersectionCount;
 
+					clrscr();
 					drawBoard(boardStartPoint, gameBoardStartPoint, gameBoardSize, stones, intersectionCount, 1);
 					initializeMenu(menuStartPoint, menuSize, boardCursor);
 				}
