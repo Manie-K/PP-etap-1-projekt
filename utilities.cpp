@@ -722,9 +722,7 @@ bool saveToFile(GameStateSave_t* gameState, char* name)
 	FILE* f;
 	f = fopen(name, "w");
 	if (f == NULL) 
-	{ 
 		return false;
-	}
 	int x = fwrite(gameState, sizeof(GameStateSave_t), 1, f);
 	fclose(f);
 	return x != 0;

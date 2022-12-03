@@ -70,7 +70,6 @@ int main(){
 	initializeMenu(menuStartPoint, menuSize, boardCursor);
 
 	do {
-
 		boardCursor = { ((cursorPosition.x - gameBoardStartPoint.x) / (CELL_WIDTH + 1)) + 1, ((cursorPosition.y - gameBoardStartPoint.y) / 2) + 1 };
 
 		drawBoard(boardStartPoint, gameBoardStartPoint, gameBoardSize, stones, intersectionCount, 0);
@@ -184,7 +183,7 @@ int main(){
 		}
 		else if (zn == 's')
 		{
-			char* fileName = new char(menuSize.x-3);
+			char* fileName = new char[menuSize.x-3];
 			if (getName(fileName, menuStartPoint, menuEndPoint, menuSize) != -1)
 			{
 				GameStateSave_t* gameState = new GameStateSave_t;
@@ -206,7 +205,7 @@ int main(){
 					textcolor(BLACK);
 				}
 				else {
-					textcolor(GREEN);
+					textcolor(DARKGRAY);
 					textbackground(MENU_BACKGROUND);
 					gotoxy(menuStartPoint.x + 1, menuStartPoint.y + MENU_HEIGHT - 2);
 					cputs("SUCCESSFULLY SAVED");
@@ -215,11 +214,11 @@ int main(){
 				}
 				delete gameState;
 			}
-			//delete fileName;
+			delete[] fileName;
 		}
 		else if (zn == 'l')
 		{
-			char* fileName = new char(menuSize.x - 3);
+			char* fileName = new char[menuSize.x - 3];
 			if (getName(fileName, menuStartPoint, menuEndPoint, menuSize) != -1)
 			{ 
 				GameStateSave_t* gameState = new GameStateSave_t;
@@ -253,7 +252,7 @@ int main(){
 				}
 				delete gameState;
 			}
-			//delete fileName;
+			delete []fileName;
 		}
 	} while (zn != 'q');
 
