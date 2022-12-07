@@ -104,7 +104,6 @@ void drawGameBoard(int startX, int startY, Dimensions_t gameBoardDimensions) {
 	Point_t bottomLeft = {startX, startY + gameBoardSize.y-1};
 	//------
 	//Center and sides
-	gotoxy(50, 50);
 	for (int i = 0; i < gameBoardSize.y; i++)
 	{
 		gotoxy(topLeft.x, topLeft.y + i); //game board start on first iteration
@@ -179,9 +178,9 @@ void initializeMenu(const Point_t menuStartPoint, const Dimensions_t menuSize, c
 	gotoxy(menuStartPoint.x + 1, menuStartPoint.y + (k++));
 	cputs(IMPLEMENTED_FUNCTIONALITIES_STRING);
 	gotoxy(menuStartPoint.x + 1, menuStartPoint.y + (k++));
-	cputs("(a) (b) (c) (d) (e)     ... ");
+	cputs("(a) (b) (c) (d) (e) (f) ");
 	gotoxy(menuStartPoint.x + 1, menuStartPoint.y + (k++));
-	cputs("(f) (g) (h) (k)     ... ");
+	cputs("(g) (h) (j) (k) *(l)*   ");
 	gotoxy(menuStartPoint.x, menuStartPoint.y + (k++));
 	for (int i = 0; i < menuSize.x; i++) putch('-');
 	k += menuControlsDisplay({ menuStartPoint.x + 1, menuStartPoint.y + k});
@@ -411,21 +410,21 @@ int customGameSize()
 		if (zn == 0)
 		{
 			zn = getch();
-			if (zn == 0x4b)
+			if (zn == LEFT_ARROW)
 			{
 				if(size > MIN_GAME_BOARD_SIZE)size--;
 			}
-			else if (zn == 0x4d)
+			else if (zn == RIGHT_ARROW)
 			{
 				if (size < MAX_GAME_BOARD_SIZE)size++;
 			}
 		}
-		else if(zn == '\r') //enter key
+		else if(zn == ENTER)
 		{ 
 			clrscr();
 			return size;
 		}
-		else if (zn == '\x1b') //escape
+		else if (zn == ESC) //escape
 		{
 			clrscr();
 			return chooseGameSize();
@@ -627,6 +626,7 @@ void initializeCursor(Point_t &cursorPosition, Point_t &boardCursor, const Point
 	cursorPosition = { gameBoardStartPoint.x, gameBoardStartPoint.y };
 	boardCursor = { 1,1 };
 }
+
 void initializeEndPoints(Point_t &gameBoardEndPoint, Point_t &boardEndPoint, Point_t &menuEndPoint,
 const Dimensions_t menuSize, const EndPointsInit_t X, const GameBoardDimensions_t gameBoardSize) {
 	gameBoardEndPoint = { X.gameBoardStartPoint.x + gameBoardSize.x - 1, X.gameBoardStartPoint.y + gameBoardSize.y - 1 };
@@ -706,13 +706,13 @@ int getName(char* name, Point_t menuStart, Point_t menuEnd, Dimensions_t menuSiz
 	for (int i = 0, x = 0; x < nameWidth; x++, i++)
 	{
 		zn = getche();
-		if (zn == '\x1b') //escape = cancel action
+		if (zn == ESC)
 		{
 			menuCleanBottomInfo(menuStart, menuEnd);
 			return -1;
 		}
 		name[i] = zn;
-		if (zn == '\r')
+		if (zn == ENTER)
 		{
 			name[i] = '\0';
 			menuCleanBottomInfo(menuStart, menuEnd);
@@ -733,19 +733,19 @@ bool saveVarsToFile(GameStateSave_t* gameState, char* name)
 	f = fopen(name, "w");
 	if (f == NULL) 
 		return false;
-	int x = fwrite(gameState, sizeof(GameStateSave_t), 1, f);
+	int x = fwrite(gameState, (size_t)sizeof(GameStateSave_t), 1, f);
 	fclose(f);
 	return x != 0;
 }
-bool saveArraysToFile(char* name, int size, Stone_t stones[], Stone_t ko[], Stone_t koBuffer[])
+bool saveArraysToFile(char* name, size_t size, Stone_t stones[], Stone_t ko[], Stone_t koBuffer[])
 {
 	FILE* f;
 	f = fopen(name, "a"); //appending to the file, gamestate saved there already
 	if (f == NULL)
 		return false;
-	int a = fwrite(stones, sizeof(Stone_t), size, f);
-	int b = fwrite(ko, sizeof(Stone_t), size, f);
-	int c = fwrite(koBuffer, sizeof(Stone_t), size, f);
+	int a = fwrite(stones, (size_t)sizeof(Stone_t), size, f);
+	int b = fwrite(ko, (size_t)sizeof(Stone_t), size, f);
+	int c = fwrite(koBuffer, (size_t)sizeof(Stone_t), size, f);
 	fclose(f);
 	if (a == 0 || b == 0 || c == 0) return false;
 	else return true;
@@ -758,14 +758,14 @@ bool loadFromFile(GameStateSave_t* gameState, char* name, Stone_t *&stones, Ston
 	{
 		return false;
 	}
-	int x = fread(gameState, sizeof(GameStateSave_t), 1, f);
-	int size = gameState->intersectionCount * gameState->intersectionCount;
+	int x = fread(gameState, (size_t)sizeof(GameStateSave_t), 1, f);
+	size_t size = gameState->intersectionCount * gameState->intersectionCount;
 	stones = new Stone_t[size];
 	koRule = new Stone_t[size];
 	koRuleBuffer = new Stone_t[size];
-	int a = fread(stones, sizeof(Stone_t), size, f);
-	int b = fread(koRule, sizeof(Stone_t), size, f);
-	int c = fread(koRuleBuffer, sizeof(Stone_t), size, f);
+	int a = fread(stones, (size_t)sizeof(Stone_t), size, f);
+	int b = fread(koRule, (size_t)sizeof(Stone_t), size, f);
+	int c = fread(koRuleBuffer, (size_t)sizeof(Stone_t), size, f);
 	fclose(f);
 
 	return (x != 0 && a != 0 && b != 0 && c != 0);
@@ -847,4 +847,45 @@ void saveLoadError(const char text[], int color, Point_t pos) {
 	cputs(text);
 	textbackground(BLACK);
 	textcolor(BLACK);
+}
+void displayEndScreen(Players_t players) 
+{
+	textbackground(BLACK);
+	textcolor(WHITE);
+	clrscr();
+	int l = 1, zn = 0;
+	gotoxy(1, l++);
+	cputs("THE GAME HAS ENDED!");
+	gotoxy(1, l += 2);
+	const unsigned short bufferSize = 50;
+	char buffer[bufferSize] = "";
+	float whiteScore, blackScore;
+	if (players.current.playerColor == white)
+	{
+		whiteScore = players.current.score;
+		blackScore = players.enemy.score;
+	}
+	else
+	{
+		whiteScore = players.enemy.score;
+		blackScore = players.current.score;
+	}
+	sprintf_s(buffer, "White: %.1f", whiteScore);
+	gotoxy(1, l++);
+	cputs(buffer);
+	sprintf_s(buffer, "Black: %.1f", blackScore);
+	gotoxy(1, l++);
+	cputs(buffer);
+	gotoxy(1, l++);
+	textcolor(GREEN);
+	sprintf_s(buffer, "%s", whiteScore > blackScore ? "WHITE WON!" : whiteScore == blackScore ? "DRAW!" : "BLACK WON!");
+	cputs(buffer);
+	gotoxy(1, l += 2);
+	textcolor(WHITE);
+	cputs("Press Q to quit");
+
+	do {
+		zn = getch();
+	} while (zn != 'q');
+	return;
 }
