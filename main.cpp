@@ -4,23 +4,15 @@
 #include "utilities.h"
 
 int main(){
-	//TODO
-	//PLANSZA POZA GRANICA NIE DZIALA // SCROLL
-
 #ifndef __cplusplus
 	Conio2_Init();
 #endif
-	int zn = 0, attr = 7, back = 0;
 
-	// settitle sets the window title
+	int zn = 0;
 	settitle(NAME_AND_ALBUM);
-
-	// hide the blinking cursor
 	_setcursortype(_NOCURSOR);
 	textbackground(BLACK);
 	textcolor(7);
-
-
 	//required
 	Stone_t* stones = NULL;
 	Stone_t* koRule = NULL;
@@ -108,13 +100,19 @@ int main(){
 			{
 				int score = 0;
 				placeStone(boardCursor, stones, players.current, intersectionCount);
-
 				Stone_t* neighbours = new Stone_t[NEIGHBOURS_COUNT];
 				setNeighbours(neighbours, boardCursor, stones, intersectionCount);
-				
-				for (int k = 0; k < NEIGHBOURS_COUNT; k++) {
-					if (!stoneHasLiberties(neighbours[k].position, stones, intersectionCount, neighbours[k].color))
-						score += removeStone(neighbours[k].position, stones, intersectionCount);
+				for (int i = 0; i < NEIGHBOURS_COUNT; i++)
+				{
+					if (neighbours[i].color == players.enemy.stoneColor)
+					{
+						uncheckStones(stones, intersectionCount);
+						if (!chainHasLiberties(neighbours[i].position, stones, intersectionCount))
+						{
+							uncheckStones(stones, intersectionCount);
+							score += removeChain(neighbours[i].position, stones, intersectionCount);
+						}
+					}
 				}
 				if (firstRound) { //initial black advantage
 					handicap++;
@@ -128,7 +126,7 @@ int main(){
 					}
 					else
 					{
-						removeStone(boardCursor, stones, intersectionCount);
+						removeChain(boardCursor, stones, intersectionCount);
 						getRemovedStonesBack(boardCursor, stones, koRuleBuffer, intersectionCount);
 					}
 				}
@@ -194,31 +192,14 @@ int main(){
 				gameState->firstRound = firstRound;
 				gameState->handicap = handicap;
 
-				if(!saveVarsToFile(gameState, fileName)){
-					textcolor(RED);
-					textbackground(MENU_BACKGROUND);
-					gotoxy(menuStartPoint.x + 1, menuStartPoint.y + MENU_HEIGHT - 2);
-					cputs("DID NOT SAVE TO FILE");
-					textbackground(BLACK);
-					textcolor(BLACK);
-				}
-				else {
-					if (saveArraysToFile(fileName, stonesArraySize, stones, koRule, koRuleBuffer)) {
-						textcolor(DARKGRAY);
-						textbackground(MENU_BACKGROUND);
-						gotoxy(menuStartPoint.x + 1, menuStartPoint.y + MENU_HEIGHT - 2);
-						cputs("SUCCESSFULLY SAVED");
-						textbackground(BLACK);
-						textcolor(BLACK);
-					}
-					else {
-						textcolor(RED);
-						textbackground(MENU_BACKGROUND);
-						gotoxy(menuStartPoint.x + 1, menuStartPoint.y + MENU_HEIGHT - 2);
-						cputs("ERROR WHILE SAVING TO FILE");
-						textbackground(BLACK);
-						textcolor(BLACK);
-					}
+				if(!saveVarsToFile(gameState, fileName))
+					saveLoadError("DID NOT SAVE TO FILE", RED, { menuStartPoint.x + 1, menuStartPoint.y + MENU_HEIGHT - 2 });
+				else 
+				{
+					if (saveArraysToFile(fileName, stonesArraySize, stones, koRule, koRuleBuffer))
+						saveLoadError("SUCCESSFULLY SAVED", DARKGRAY, { menuStartPoint.x + 1, menuStartPoint.y + MENU_HEIGHT - 2 });
+					else
+						saveLoadError("ERROR WHILE SAVING TO FILE", RED, { menuStartPoint.x + 1, menuStartPoint.y + MENU_HEIGHT - 2 });
 				}
 				delete gameState;
 			}

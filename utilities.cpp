@@ -163,7 +163,6 @@ void drawStones(Stone_t stones[], int stoneArraySize_1D, Point_t gameStart)
 	}
 	textcolor(BLACK);
 }
-
 void initializeMenu(const Point_t menuStartPoint, const Dimensions_t menuSize, const Point_t cursorPosition)
 {
 	textbackground(MENU_BACKGROUND);
@@ -182,7 +181,7 @@ void initializeMenu(const Point_t menuStartPoint, const Dimensions_t menuSize, c
 	gotoxy(menuStartPoint.x + 1, menuStartPoint.y + (k++));
 	cputs("(a) (b) (c) (d) (e)     ... ");
 	gotoxy(menuStartPoint.x + 1, menuStartPoint.y + (k++));
-	cputs("(g) (h)         (k)     ... ");
+	cputs("(f) (g) (h) (k)     ... ");
 	gotoxy(menuStartPoint.x, menuStartPoint.y + (k++));
 	for (int i = 0; i < menuSize.x; i++) putch('-');
 	k += menuControlsDisplay({ menuStartPoint.x + 1, menuStartPoint.y + k});
@@ -282,8 +281,6 @@ void setMenuBackground(Point_t menuStartPoint, Dimensions_t menuSize) {
 		}
 	}
 }
-
-
 void setBoardDimensions(GameBoardDimensions_t &board, const int intersections)
 {
 	board.x = 4 * intersections - 3;
@@ -302,24 +299,18 @@ void setGameBoardStartPoint(Point_t &gameBoardStartPoint, const Point_t starting
 	gameBoardStartPoint.x = startingPoint.x + 1 + GAME_BOARD_PADDING * CELL_WIDTH;
 	gameBoardStartPoint.y = startingPoint.y + 1 + GAME_BOARD_PADDING;
 }
-
 bool constantsOK(const Constants_t constants)
 {
 	if (constants.boardStart.x < 1 ||
 		constants.boardStart.y < 1 ||
 		constants.menuStart.x < 1 ||
 		constants.menuStart.y < 1) {
-		gotoxy(1, 1);
-		textcolor(RED);
-		textbackground(BLACK);
-		cputs("Menu or board outside of window!\n");
+		printError("Menu or board outside of window!\n");
 		return false;
 	}
-	if (GAME_BOARD_PADDING < 1) {
-		gotoxy(1, 1);
-		textcolor(RED);
-		textbackground(BLACK);
-		cputs("Menu padding less than 1!\n");
+	if (GAME_BOARD_PADDING < 1) 
+	{
+		printError("Menu padding less than 1!\n");
 		return false;
 	}
 	text_info info;
@@ -327,10 +318,7 @@ bool constantsOK(const Constants_t constants)
 	if (constants.boardEndPoint.x > info.screenwidth)
 	{
 		return false;//scrolling
-		gotoxy(1, 1);
-		textcolor(RED);
-		textbackground(BLACK);
-		cputs("Board outside of window(doesn't fit)!\n");
+		printError("Board outside of window(doesn't fit)!\n");
 	}
 	return true;
 }
@@ -344,7 +332,6 @@ bool rectanglesCollide(Point_t A_topLeft, Point_t A_bottomRight, Point_t B_topLe
 	cputs("Menu on top of board!\n");
 	return true;
 }
-
 int chooseGameSize()
 {
 	textbackground(BLACK);
@@ -445,7 +432,6 @@ int customGameSize()
 		}
 	}
 }
-
 void resetStones(Stone_t stones[], int oneDimSize)
 {
 	if (stones == NULL) {
@@ -462,6 +448,7 @@ void resetStones(Stone_t stones[], int oneDimSize)
 			{
 				stones[x + y * oneDimSize].color = empty;
 				stones[x + y * oneDimSize].position = { x + 1,y + 1 };
+				stones[x + y * oneDimSize].checked = false;
 			}
 		}
 	}
@@ -485,7 +472,6 @@ void drawCursor(Point_t cursorPosition)
 
 	textcolor(BLACK);
 }
-
 Stone_t findStoneByPos(Stone_t stones[], Point_t pos, int size_1D)
 {
 	if(pos.x>=1 && pos.y>=1) {
@@ -498,11 +484,11 @@ Stone_t findStoneByPos(Stone_t stones[], Point_t pos, int size_1D)
 			}
 		}
 	}
-	return { {-1,-1}, empty}; //return a stone with {-1,-1} position
+	return { {-1,-1}, empty, false}; //return a stone with {-1,-1} position
 }
 bool checkStone(Point_t pos, Stone_t stones[], int size_1D, SinglePlayer_T& currentPlayer)
 {
-	Stone_t thisStone = findStoneByPos(stones, pos, size_1D);
+	/*Stone_t thisStone = findStoneByPos(stones, pos, size_1D);
 	if (thisStone.color != empty) return false;
 	if (stoneHasLiberties(pos, stones, size_1D, currentPlayer.stoneColor)) 
 	{ 
@@ -518,7 +504,36 @@ bool checkStone(Point_t pos, Stone_t stones[], int size_1D, SinglePlayer_T& curr
 		{
 			return false;
 		}
+	}*/
+	int x = pos.x - 1;
+	int y = pos.y - 1;
+	bool a = false;
+	if (stones[x+y*size_1D].color != empty) return false;
+	stones[x + y * size_1D].color = currentPlayer.stoneColor;
+	uncheckStones(stones, size_1D);
+	if (chainHasLiberties(pos, stones, size_1D)) 
+	{
+		a = true;
 	}
+	else 
+	{
+		uncheckStones(stones, size_1D);
+		Stone_t* neighbours = new Stone_t[NEIGHBOURS_COUNT];
+		setNeighbours(neighbours, pos, stones, size_1D);
+		for (int i = 0; i < NEIGHBOURS_COUNT; i++)
+		{
+			if (neighbours[i].color != currentPlayer.stoneColor && neighbours[i].color != empty)
+			{
+				uncheckStones(stones, size_1D);
+				if (!chainHasLiberties(neighbours[i].position, stones, size_1D)) a = true;
+			}
+		}
+
+		delete[] neighbours;
+	}
+
+	stones[x + y * size_1D].color = empty;
+	return a;
 }
 void placeStone(Point_t pos, Stone_t stones[], SinglePlayer_T player, int size_1D)
 {
@@ -535,7 +550,6 @@ void changePlayers(Players_t &players)
 	players.current.score = players.enemy.score;
 	players.enemy = temp;
 }
-
 bool stoneHasLiberties(Point_t pos, Stone_t stones[], int size_1D, StonesColors_enum currentPlayerStoneColor)
 {
 	int x = pos.x;
@@ -556,7 +570,6 @@ bool stoneHasLiberties(Point_t pos, Stone_t stones[], int size_1D, StonesColors_
 	}
 	return false;
 }
-
 bool stoneCanKill(Point_t pos, Stone_t stones[], int size_1D, SinglePlayer_T currentPlayer)
 {
 	//stones[] starts indexing from 0, board position starts from 1
@@ -604,7 +617,6 @@ void setNeighbours(Stone_t neighbours[], Point_t pos, Stone_t stones[], int size
 	neighbours[2] = findStoneByPos(stones, { pos.x + 1, pos.y }, size_1D);
 	neighbours[3] = findStoneByPos(stones, { pos.x - 1, pos.y }, size_1D);
 }
-
 void initializeVariables(const int intersectionCount, Point_t &gameBoardStartPoint, GameBoardDimensions_t &gameBoardSize, Dimensions_t &menuSize, Point_t boardStartPoint)
 {
 	setGameBoardStartPoint(gameBoardStartPoint, boardStartPoint);
@@ -615,7 +627,6 @@ void initializeCursor(Point_t &cursorPosition, Point_t &boardCursor, const Point
 	cursorPosition = { gameBoardStartPoint.x, gameBoardStartPoint.y };
 	boardCursor = { 1,1 };
 }
-
 void initializeEndPoints(Point_t &gameBoardEndPoint, Point_t &boardEndPoint, Point_t &menuEndPoint,
 const Dimensions_t menuSize, const EndPointsInit_t X, const GameBoardDimensions_t gameBoardSize) {
 	gameBoardEndPoint = { X.gameBoardStartPoint.x + gameBoardSize.x - 1, X.gameBoardStartPoint.y + gameBoardSize.y - 1 };
@@ -666,7 +677,6 @@ bool KoRuleOK(Stone_t stones[], Stone_t KoRule[], int oneDimSize)
 	}
 	return false;
 }
-
 void menuCleanBottomInfo(Point_t menuStart, Point_t menuEnd)
 {
 	textbackground(MENU_BACKGROUND);
@@ -759,4 +769,82 @@ bool loadFromFile(GameStateSave_t* gameState, char* name, Stone_t *&stones, Ston
 	fclose(f);
 
 	return (x != 0 && a != 0 && b != 0 && c != 0);
+}
+int removeChain(Point_t pos, Stone_t stones[], int size_1D) {
+	int x = pos.x - 1;
+	int y = pos.y - 1;
+
+	stones[x+y*size_1D].checked = true;
+	if (stones[x + y * size_1D].color == empty) return 0;
+	Stone_t* neighbours = new Stone_t[NEIGHBOURS_COUNT];
+	setNeighbours(neighbours, pos, stones, size_1D);
+
+	int removed = 1;
+	for (int i = 0; i < NEIGHBOURS_COUNT; i++) {
+		
+		if (neighbours[i].position.x != -1 && neighbours[i].color == stones[x + y * size_1D].color && neighbours[i].checked == false)
+		{
+			removed += removeChain(neighbours[i].position, stones, size_1D);
+		}
+	}
+	stones[x + y * size_1D].color = empty; 
+
+	delete[] neighbours;
+	return removed;
+}
+void uncheckStones(Stone_t stones[], int size_1D)
+{
+	for (int y = 0; y < size_1D; y++)
+	{
+		for (int x = 0; x < size_1D; x++)
+		{
+			stones[x + y * size_1D].checked = false;
+		}
+	}
+}
+bool chainHasLiberties(Point_t pos, Stone_t stones[], int size_1D)
+{
+	int x = pos.x - 1;
+	int y = pos.y - 1;
+
+	bool a = false;
+
+	stones[x + y * size_1D].checked = true;
+	Stone_t* neighbours = new Stone_t[NEIGHBOURS_COUNT];
+	setNeighbours(neighbours, pos, stones, size_1D);
+
+	for (int i = 0; i < NEIGHBOURS_COUNT; i++) {
+		if(neighbours[i].checked == false && neighbours[i].position.x !=-1)
+		{
+			if (neighbours[i].color == empty)
+			{
+				delete[] neighbours;
+				return true;
+			}
+			else if (neighbours[i].color == stones[x+y*size_1D].color)
+			{
+				a = (chainHasLiberties(neighbours[i].position, stones, size_1D)) ? true : false;
+			}
+		}
+		if (a)
+		{
+			delete[] neighbours;
+			return a;
+		}
+	}
+	return false;
+}
+void printError(const char text[]) {
+	gotoxy(1, 1);
+	textcolor(RED);
+	textbackground(BLACK);
+	cputs(text);
+}
+void saveLoadError(const char text[], int color, Point_t pos) {
+	textcolor(color);
+	textbackground(MENU_BACKGROUND);
+	gotoxy(pos.x, pos.y);
+	cputs(text);
+	textbackground(BLACK);
+	textcolor(BLACK);
 }
