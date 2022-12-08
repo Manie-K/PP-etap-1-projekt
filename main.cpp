@@ -1,4 +1,4 @@
-//FINISHED
+//REALLY FINISHED
 #include<stdio.h>
 #include"conio2.h"
 #include "configuration.h"
@@ -197,7 +197,7 @@ int main(){
 		}
 		else if (zn == ENTER)
 		{
-			if (gameStarted(stones, intersectionCount))
+			if (gameStarted(stones, stonesArraySize))
 			{
 				if (firstRound)
 					firstRound = false;
@@ -295,16 +295,15 @@ int main(){
 			}
 
 			//calculate score
-			//tu bedzie funkcja ktora zlicza terytorium
 			bool blackNeighbour = false, whiteNeighbour = false;
 			uncheckStones(stones, intersectionCount);
-			for (int x = 0; x < intersectionCount; x++)
+			for (int y = 0; y < intersectionCount; y++)
 			{
-				for (int y = 0; y < intersectionCount; y++)
+				for (int x = 0; x < intersectionCount; x++)
 				{
 					blackNeighbour = false;
 					whiteNeighbour = false;
-					if (stones[x + y * intersectionCount].color == empty && stones[x + y * intersectionCount].checked == false) //C6385 warning, but false positive
+					if ((stones[x + y * intersectionCount].color == empty) && (stones[x + y * intersectionCount].checked == false)) //C6385 warning, but false positive
 					{
 						int m = calculateTerritory({ x + 1,y + 1 }, stones, intersectionCount, whiteNeighbour, blackNeighbour);
 						if (m != 0)

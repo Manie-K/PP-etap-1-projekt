@@ -431,7 +431,7 @@ int customGameSize()
 		}
 	}
 }
-void resetStones(Stone_t stones[], int oneDimSize)
+void resetStones(Stone_t stones[], int size_1D)
 {
 	if (stones == NULL) {
 		gotoxy(1, 1);
@@ -441,13 +441,13 @@ void resetStones(Stone_t stones[], int oneDimSize)
 	}
 	else 
 	{
-		for (int y = 0; y < oneDimSize; y++)
+		for (int y = 0; y < size_1D; y++)
 		{
-			for (int x = 0; x < oneDimSize; x++)
+			for (int x = 0; x < size_1D; x++)
 			{
-				stones[x + y * oneDimSize].color = empty;
-				stones[x + y * oneDimSize].position = { x + 1,y + 1 };
-				stones[x + y * oneDimSize].checked = false;
+				stones[x + y * size_1D].color = empty;
+				stones[x + y * size_1D].position = { x + 1,y + 1 };
+				stones[x + y * size_1D].checked = false;
 			}
 		}
 	}
@@ -634,44 +634,44 @@ const Dimensions_t menuSize, const EndPointsInit_t X, const GameBoardDimensions_
 	menuEndPoint = { X.menuStartPoint.x + menuSize.x - 1, X.menuStartPoint.y + menuSize.y - 1 };
 }
 
-void copyStoneArray(Stone_t source[], Stone_t dest[], int oneDimSize)
+void copyStoneArray(Stone_t source[], Stone_t dest[], int size_1D)
 {
-	for (int y = 0; y < oneDimSize; y++)
+	for (int y = 0; y < size_1D; y++)
 	{
-		for (int x = 0; x < oneDimSize; x++)
+		for (int x = 0; x < size_1D; x++)
 		{
-			dest[x+y*oneDimSize].color = source[x + y * oneDimSize].color;
+			dest[x+y*size_1D].color = source[x + y * size_1D].color;
 		}
 	}
 }
-void getRemovedStonesBack(Point_t pos, Stone_t stones[], Stone_t backup[], int oneDimSize)
+void getRemovedStonesBack(Point_t pos, Stone_t stones[], Stone_t backup[], int size_1D)
 {
 	int x = pos.x - 1;
 	int y = pos.y - 1;
-	int index = x+1 + y * oneDimSize;
+	int index = x+1 + y * size_1D;
 
-	if (index >= 0 && index <= oneDimSize * oneDimSize - 1)
+	if (index >= 0 && index <= size_1D * size_1D - 1)
 		stones[index].color = backup[index].color;
 
-	index = x-1 + y * oneDimSize;
-	if (index >= 0 && index <= oneDimSize * oneDimSize - 1)
+	index = x-1 + y * size_1D;
+	if (index >= 0 && index <= size_1D * size_1D - 1)
 		stones[index].color = backup[index].color;
 
-	index = x + (y-1) * oneDimSize;
-	if (index >= 0 && index <= oneDimSize * oneDimSize - 1)
+	index = x + (y-1) * size_1D;
+	if (index >= 0 && index <= size_1D * size_1D - 1)
 		stones[index].color = backup[index].color;
 
-	index = x + (y+1) * oneDimSize;
-	if (index >= 0 && index <= oneDimSize * oneDimSize - 1)
+	index = x + (y+1) * size_1D;
+	if (index >= 0 && index <= size_1D * size_1D - 1)
 		stones[index].color = backup[index].color;
 }
-bool KoRuleOK(Stone_t stones[], Stone_t KoRule[], int oneDimSize)
+bool KoRuleOK(Stone_t stones[], Stone_t KoRule[], int size_1D)
 {
-	for (int y = 0; y < oneDimSize; y++)
+	for (int y = 0; y < size_1D; y++)
 	{
-		for (int x = 0; x < oneDimSize; x++)
+		for (int x = 0; x < size_1D; x++)
 		{
-			if(KoRule[x + y * oneDimSize].color != stones[x + y * oneDimSize].color)
+			if(KoRule[x + y * size_1D].color != stones[x + y * size_1D].color)
 				return true;
 		}
 	}
@@ -900,11 +900,15 @@ int calculateTerritory(Point_t pos, Stone_t stones[], int size_1D, bool &wh, boo
 	setNeighbours(neighbours, pos, stones, size_1D);
 	for (int i = 0; i < NEIGHBOURS_COUNT; i++)
 	{
+		Point_t temp = neighbours[i].position;
+		neighbours[i].checked = stones[temp.x - 1 + (temp.y - 1) * size_1D].checked; //so neighbours are updated, so some stones aren't checked twice
 		if (neighbours[i].position.x != -1)
 		{
-			if (neighbours[i].checked == false && neighbours[i].color == empty)
-			{
-				size += calculateTerritory(neighbours[i].position, stones, size_1D, wh, bl);
+			if (neighbours[i].color == empty) {
+				if (neighbours[i].checked == false)
+				{
+					size += calculateTerritory(neighbours[i].position, stones, size_1D, wh, bl);
+				}
 			}
 			else if (neighbours[i].color == whiteStone)
 			{
@@ -916,7 +920,7 @@ int calculateTerritory(Point_t pos, Stone_t stones[], int size_1D, bool &wh, boo
 			}
 		}
 	}
-
+	
 	delete []neighbours;
 	return (wh && bl) ? 0 : size; //return 0 if both black and white neigbours
 }

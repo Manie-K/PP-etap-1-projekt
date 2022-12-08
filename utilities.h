@@ -86,7 +86,7 @@ bool constantsOK(Constants_t constants); //checks if the initial constants are o
 bool rectanglesCollide(Point_t A_topLeft, Point_t A_bottomRight, Point_t B_topLeft, Point_t B_bottomRight);
 int chooseGameSize(); //sets the size of the game board (intersection count)
 int customGameSize(); //picks custom game board size
-void resetStones(Stone_t stones[], int oneDimSize);
+void resetStones(Stone_t stones[], int size_1D);
 void drawCursor(Point_t cursorPosition);
 Stone_t findStoneByPos(Stone_t stones[], Point_t pos, int size_1D); //return the point with this position or {-1, -1} if not found (outside of board)
 bool checkStone(Point_t pos, Stone_t stones[], int size_1D, SinglePlayer_T& currentPlayer);
@@ -101,9 +101,9 @@ void initializeCursor(Point_t& cursorPosition, Point_t& boardCursor, Point_t gam
 void initializeEndPoints(Point_t& gameBoardEndPoint, Point_t& boardEndPoint, Point_t& menuEndPoint, const Dimensions_t menuSize,
 const EndPointsInit_t X, const GameBoardDimensions_t gameBoardSize);
 
-void copyStoneArray(Stone_t source[], Stone_t dest[], int oneDimSize);
-void getRemovedStonesBack(Point_t pos, Stone_t stones[], Stone_t backup[], int oneDimSize); //reloads the neigbours stones
-bool KoRuleOK(Stone_t stones[], Stone_t KoRule[], int oneDimSize);
+void copyStoneArray(Stone_t source[], Stone_t dest[], int size_1D);
+void getRemovedStonesBack(Point_t pos, Stone_t stones[], Stone_t backup[], int size_1D); //reloads the neigbours stones
+bool KoRuleOK(Stone_t stones[], Stone_t KoRule[], int size_1D);
 void menuCleanBottomInfo(Point_t menuStart, Point_t menuEnd); //cleans bottom part of the menu
 int getName(char* name, Point_t menuStart, Point_t menuEnd, Dimensions_t menuSize); //draws and gets the name of the file //-1 if cancelled
 bool saveVarsToFile(GameStateSave_t* gameState, char* name); //saves the gameState struct to file, returns false if error occurs
