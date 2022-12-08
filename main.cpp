@@ -1,3 +1,4 @@
+//FINISHED
 #include<stdio.h>
 #include"conio2.h"
 #include "configuration.h"
@@ -12,12 +13,12 @@ int main(){
 	settitle(NAME_AND_ALBUM);
 	_setcursortype(_NOCURSOR);
 	textbackground(BLACK);
-	textcolor(7);
+	textcolor(WHITE);
 	
-	//non-saved
+	//non-saved variables
 	int zn = 0;
 	bool topView = false;
-	//required
+	//required variables
 	Stone_t* stones = NULL;
 	Stone_t* koRule = NULL;
 	Stone_t* koRuleBuffer = NULL;
@@ -28,7 +29,7 @@ int main(){
 	bool firstRound = true;
 	bool handicap = false;
 	
-	//are set from required ones
+	//Theese variables are set from required ones
 	unsigned int stonesArraySize;
 	Point_t gameBoardStartPoint;
 	GameBoardDimensions_t gameBoardSize;
@@ -196,14 +197,13 @@ int main(){
 		}
 		else if (zn == ENTER)
 		{
-			changePlayers(players);
-			if (firstRound)
+			if (gameStarted(stones, intersectionCount))
 			{
-				firstRound = false;
-			}
-			else 
-			{
-				players.current.score++;
+				if (firstRound)
+					firstRound = false;
+				else
+					players.enemy.score++;
+				changePlayers(players);
 			}
 		}
 		else if (zn == 's')
@@ -296,7 +296,37 @@ int main(){
 
 			//calculate score
 			//tu bedzie funkcja ktora zlicza terytorium
-
+			bool blackNeighbour = false, whiteNeighbour = false;
+			uncheckStones(stones, intersectionCount);
+			for (int x = 0; x < intersectionCount; x++)
+			{
+				for (int y = 0; y < intersectionCount; y++)
+				{
+					blackNeighbour = false;
+					whiteNeighbour = false;
+					if (stones[x + y * intersectionCount].color == empty && stones[x + y * intersectionCount].checked == false) //C6385 warning, but false positive
+					{
+						int m = calculateTerritory({ x + 1,y + 1 }, stones, intersectionCount, whiteNeighbour, blackNeighbour);
+						if (m != 0)
+						{
+							if (blackNeighbour)
+							{
+								if (players.current.playerColor == black)
+									players.current.score += m;
+								else
+									players.enemy.score += m;
+							}
+							else if (whiteNeighbour)
+							{
+								if (players.current.playerColor == white)
+									players.current.score += m;
+								else
+									players.enemy.score += m;
+							}
+						}
+					}
+				}
+			}
 			//display
 			displayEndScreen(players);
 

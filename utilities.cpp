@@ -224,7 +224,7 @@ int updateMenu(const Point_t dynamicMenuStart, const Point_t cursorPosition, con
 
 	textbackground(MENU_BACKGROUND);
 	textcolor(MENU_TEXT);
-	int scoreBlack;
+	int scoreBlack; //here scores can be INT, beacause float values are only added after the game finishes
 	int scoreWhite;
 	int cursorX = cursorPosition.x;
 	int cursorY = cursorPosition.y;
@@ -853,10 +853,10 @@ void displayEndScreen(Players_t players)
 	textbackground(BLACK);
 	textcolor(WHITE);
 	clrscr();
-	int l = 1, zn = 0;
-	gotoxy(1, l++);
+	int l = 2, p = (l-1)*3 + 1, zn = 0;
+	gotoxy(p, l++);
 	cputs("THE GAME HAS ENDED!");
-	gotoxy(1, l += 2);
+	gotoxy(p, l += 2);
 	const unsigned short bufferSize = 50;
 	char buffer[bufferSize] = "";
 	float whiteScore, blackScore;
@@ -871,16 +871,16 @@ void displayEndScreen(Players_t players)
 		blackScore = players.current.score;
 	}
 	sprintf_s(buffer, "White: %.1f", whiteScore);
-	gotoxy(1, l++);
+	gotoxy(p, l++);
 	cputs(buffer);
 	sprintf_s(buffer, "Black: %.1f", blackScore);
-	gotoxy(1, l++);
+	gotoxy(p, l++);
 	cputs(buffer);
-	gotoxy(1, l++);
+	gotoxy(p, l++);
 	textcolor(GREEN);
 	sprintf_s(buffer, "%s", whiteScore > blackScore ? "WHITE WON!" : whiteScore == blackScore ? "DRAW!" : "BLACK WON!");
 	cputs(buffer);
-	gotoxy(1, l += 2);
+	gotoxy(p, l += 2);
 	textcolor(WHITE);
 	cputs("Press Q to quit");
 
@@ -888,4 +888,42 @@ void displayEndScreen(Players_t players)
 		zn = getch();
 	} while (zn != 'q');
 	return;
+}
+int calculateTerritory(Point_t pos, Stone_t stones[], int size_1D, bool &wh, bool &bl)
+{
+	int x = pos.x - 1;
+	int y = pos.y - 1;
+
+	stones[x + y * size_1D].checked = true;
+	int size = 1;
+	Stone_t* neighbours = new Stone_t[NEIGHBOURS_COUNT];
+	setNeighbours(neighbours, pos, stones, size_1D);
+	for (int i = 0; i < NEIGHBOURS_COUNT; i++)
+	{
+		if (neighbours[i].position.x != -1)
+		{
+			if (neighbours[i].checked == false && neighbours[i].color == empty)
+			{
+				size += calculateTerritory(neighbours[i].position, stones, size_1D, wh, bl);
+			}
+			else if (neighbours[i].color == whiteStone)
+			{
+				wh = true;
+			}
+			else if (neighbours[i].color == blackStone)
+			{
+				bl = true;
+			}
+		}
+	}
+
+	delete []neighbours;
+	return (wh && bl) ? 0 : size; //return 0 if both black and white neigbours
+}
+bool gameStarted(Stone_t stones[], int size)
+{
+	for (int i = 0; i < size; i++) 
+		if (stones[i].color == blackStone) 
+			return true;
+	return false;
 }

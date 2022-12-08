@@ -118,3 +118,5 @@ bool chainHasLiberties(Point_t pos, Stone_t stones[], int size_1D);
 void printError(const char text[]);
 void saveLoadError(const char text[], int color, Point_t pos); //prints error in save/load area
 void displayEndScreen(Players_t players);
+int calculateTerritory(Point_t pos, Stone_t stones[], int size_1D, bool& wh, bool& bl);
+bool gameStarted(Stone_t stones[], int size); //checks if black made a move (if not, black can't skip turn)

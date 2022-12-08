@@ -1,6 +1,6 @@
 #pragma once
 //MAIN SETTINGS---------------------------------------------------------------
-#define BOARD_START_POINT {32,18} //sets the board (border + padding + game board) top left point {x,y} 
+#define BOARD_START_POINT {32,4} //sets the board (border + padding + game board) top left point {x,y} 
 #define MENU_START_POINT {1,1} //sets the menu top left point {x,y}
 #define STONE_CHAR 254 //the character used to represent a stone on board
 
