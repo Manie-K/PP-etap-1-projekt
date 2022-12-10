@@ -1,4 +1,4 @@
-//REALLY FINISHED
+//PROJECT DONE
 #include<stdio.h>
 #include"conio2.h"
 #include "configuration.h"
@@ -23,22 +23,17 @@ int main(){
 	Stone_t* koRule = NULL;
 	Stone_t* koRuleBuffer = NULL;
 	Players_t players;
-	Point_t menuStartPoint = MENU_START_POINT;
-	Point_t boardStartPoint = BOARD_START_POINT;
+	Point_t menuStartPoint = MENU_START_POINT, boardStartPoint = BOARD_START_POINT;
 	int intersectionCount;
-	bool firstRound = true;
-	bool handicap = false;
+	bool firstRound = true,  handicap = false;
 	
 	//Theese variables are set from required ones
 	unsigned int stonesArraySize;
 	Point_t gameBoardStartPoint;
 	GameBoardDimensions_t gameBoardSize;
 	Dimensions_t menuSize;
-	Point_t gameBoardEndPoint;
-	Point_t boardEndPoint;
-	Point_t menuEndPoint;
-	Point_t cursorPosition;
-	Point_t boardCursor;
+	Point_t gameBoardEndPoint, boardEndPoint, menuEndPoint;
+	Point_t cursorPosition, boardCursor;
 
 	//setting variables values
 	players = DEFAULT_PLAYER_AND_SCORES;

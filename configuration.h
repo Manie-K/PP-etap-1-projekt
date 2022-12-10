@@ -1,4 +1,5 @@
 #pragma once
+//PROJECT DONE
 //MAIN SETTINGS---------------------------------------------------------------
 #define BOARD_START_POINT {32,4} //sets the board (border + padding + game board) top left point {x,y} 
 #define MENU_START_POINT {1,1} //sets the menu top left point {x,y}

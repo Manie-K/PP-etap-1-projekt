@@ -1,5 +1,6 @@
 #pragma once
 #include "configuration.h"
+//PROJECT DONE
 
 //STRUCTURES
 struct Point_t {
